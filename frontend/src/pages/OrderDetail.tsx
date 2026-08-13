@@ -70,7 +70,6 @@ export default function OrderDetail(){
 
           <div className="mt-6 flex gap-2">
             <Link to="/orders" className="px-4 py-2 rounded border border-border">Volver a mis pedidos</Link>
-            <button onClick={() => window.print()} className="px-4 py-2 rounded bg-primary text-white">Imprimir recibo</button>
           </div>
         </div>
       </main>

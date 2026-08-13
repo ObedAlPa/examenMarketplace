@@ -113,7 +113,20 @@ export default function Checkout(){
     clear()
     setTimeout(() => {
       setSubmitting(false)
-      // redirect to order detail / receipt
+      // show order summary in a simple prompt (minimal requirement) then redirect
+      try {
+        const summaryLines = [
+          `Pedido creado: ${id}`,
+          `Total: $${total.toFixed(2)}`,
+          `Artículos: ${items.length} (cantidad total: ${items.reduce((s, it) => s + it.cantidad, 0)})`
+        ]
+        // include first few items
+        items.slice(0, 5).forEach(it => summaryLines.push(`${it.titulo} x${it.cantidad} — $${(it.precio*it.cantidad).toFixed(2)}`))
+        window.alert(summaryLines.join('\n'))
+      } catch (e) {
+        // fallback to simple alert
+        window.alert(`Pedido ${id} creado. Total: $${total.toFixed(2)}`)
+      }
       navigate(`/orders/${id}`)
     }, 800)
   }
