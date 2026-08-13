@@ -1,5 +1,6 @@
-// userService: local mock for users (localStorage-backed)
+// userService: local mock for users (localStorage-backed). When VITE_API_URL is set, calls the API.
 
+const API_BASE = import.meta.env.VITE_API_URL || ''
 const STORAGE_KEY = 'tenomerca_users'
 
 const defaultUsers = [
@@ -22,16 +23,31 @@ const writeAll = (list: any[]) => {
 }
 
 export const fetchUsers = async () => {
+  if (API_BASE) {
+    const res = await fetch(`${API_BASE}/api/users`)
+    if (!res.ok) throw new Error('Failed to fetch users')
+    return res.json()
+  }
   await new Promise(res => setTimeout(res, 60))
   return readAll()
 }
 
 export const getUserById = async (id: string) => {
+  if (API_BASE) {
+    const res = await fetch(`${API_BASE}/api/users/${id}`)
+    if (!res.ok) return null
+    return res.json()
+  }
   await new Promise(res => setTimeout(res, 60))
   return readAll().find(u => u.id === id) || null
 }
 
 export const createUser = async (user: any) => {
+  if (API_BASE) {
+    const res = await fetch(`${API_BASE}/api/users`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(user) })
+    if (!res.ok) throw new Error('Failed to create user')
+    return res.json()
+  }
   await new Promise(res => setTimeout(res, 80))
   const list = readAll()
   list.unshift(user)
@@ -40,6 +56,11 @@ export const createUser = async (user: any) => {
 }
 
 export const updateUser = async (id: string, patch: any) => {
+  if (API_BASE) {
+    const res = await fetch(`${API_BASE}/api/users/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patch) })
+    if (!res.ok) return null
+    return res.json()
+  }
   await new Promise(res => setTimeout(res, 80))
   const list = readAll()
   const idx = list.findIndex(u => u.id === id)
@@ -50,6 +71,11 @@ export const updateUser = async (id: string, patch: any) => {
 }
 
 export const deleteUser = async (id: string) => {
+  if (API_BASE) {
+    const res = await fetch(`${API_BASE}/api/users/${id}`, { method: 'DELETE' })
+    if (!res.ok) throw new Error('Failed to delete user')
+    return true
+  }
   await new Promise(res => setTimeout(res, 80))
   let list = readAll()
   list = list.filter(u => u.id !== id)

@@ -1,10 +1,10 @@
 // addressService.ts
-// Minimal client-side abstraction for addresses. Currently uses localStorage to store addresses
-// under the key 'tenomerca_addresses'. When backend is ready, replace implementations with
-// HTTP requests to your API (e.g., GET /api/addresses, POST /api/addresses, etc.).
+// Minimal client-side abstraction for addresses. Uses localStorage by default; when VITE_API_URL is set
+// the service will call the backend API endpoints under /api/addresses.
 
 import { v4 as uuidv4 } from 'uuid'
 
+const API_BASE = import.meta.env.VITE_API_URL || ''
 const STORAGE_KEY = 'tenomerca_addresses'
 
 export type Address = {
@@ -37,12 +37,22 @@ const writeAll = (list: Address[]) => {
 }
 
 export const fetchAddresses = async (): Promise<Address[]> => {
+  if (API_BASE) {
+    const res = await fetch(`${API_BASE}/api/addresses`)
+    if (!res.ok) throw new Error('Failed to fetch addresses')
+    return res.json()
+  }
   // Placeholder: simulate async API call
   await new Promise(res => setTimeout(res, 100))
   return readAll()
 }
 
 export const createAddress = async (data: Omit<Address, 'id'>): Promise<Address> => {
+  if (API_BASE) {
+    const res = await fetch(`${API_BASE}/api/addresses`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
+    if (!res.ok) throw new Error('Failed to create address')
+    return res.json()
+  }
   await new Promise(res => setTimeout(res, 100))
   const list = readAll()
   const newAddr: Address = { id: uuidv4(), ...data }
@@ -52,6 +62,11 @@ export const createAddress = async (data: Omit<Address, 'id'>): Promise<Address>
 }
 
 export const updateAddress = async (id: string, data: Partial<Address>): Promise<Address | null> => {
+  if (API_BASE) {
+    const res = await fetch(`${API_BASE}/api/addresses/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
+    if (!res.ok) return null
+    return res.json()
+  }
   await new Promise(res => setTimeout(res, 100))
   const list = readAll()
   const idx = list.findIndex(a => a.id === id)
@@ -62,6 +77,11 @@ export const updateAddress = async (id: string, data: Partial<Address>): Promise
 }
 
 export const deleteAddress = async (id: string): Promise<boolean> => {
+  if (API_BASE) {
+    const res = await fetch(`${API_BASE}/api/addresses/${id}`, { method: 'DELETE' })
+    if (!res.ok) throw new Error('Failed to delete address')
+    return true
+  }
   await new Promise(res => setTimeout(res, 100))
   let list = readAll()
   const before = list.length

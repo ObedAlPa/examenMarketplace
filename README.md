@@ -210,4 +210,91 @@ Para añadir imágenes reales:
 
 (README inicial: se irá completando a medida que avance el proyecto. Mantener actualizado.)
 
+
+## API contract (qué espera el frontend)
+El frontend está preparado para comunicarse con un backend REST bajo la variable de entorno VITE_API_URL (ej. VITE_API_URL=http://localhost:4000). Cuando VITE_API_URL no esté definida, el frontend usa mocks en localStorage.
+
+A continuación se especifican las rutas y formatos mínimos que el backend debe exponer para integrarse sin cambios en el cliente.
+
+- Autenticación
+  - POST /api/auth/login
+    - Body: { email, password }
+    - Respuesta: { token, user } o set-cookie httpOnly
+  - POST /api/auth/register
+    - Body: { nombre, email, password }
+    - Respuesta: { user }
+  - GET /api/auth/me
+    - Header Authorization: Bearer <token> o cookie httpOnly
+    - Respuesta: { user }
+
+- Productos
+  - GET /api/products
+    - Query: ?page=&limit=&category=&q=
+    - Respuesta: [ { id, titulo, descripcion, precio, categoria, imagenes?: string[] } ]
+  - GET /api/products/:id
+    - Respuesta: { id, titulo, descripcion, precio, categoria, imagenes?: string[] }
+  - POST /api/products
+    - Body: { titulo, descripcion, precio, categoria, imagenes?: string[] }
+    - Respuesta: { id, ... }
+  - PUT /api/products/:id
+    - Body: { titulo?, descripcion?, precio?, categoria?, imagenes? }
+    - Respuesta: { id, ... }
+  - DELETE /api/products/:id
+
+  - GET /api/products/search?q=texto  (opcional)
+
+- Categorías
+  - GET /api/categories
+    - Respuesta: [ { id, nombre } ]
+  - POST /api/categories
+    - Body: { nombre }
+  - PUT /api/categories/:id
+  - DELETE /api/categories/:id
+
+- Usuarios
+  - GET /api/users
+    - (admin) devuelve lista de usuarios: [ { id, nombre, email, role, created_at } ]
+  - GET /api/users/:id
+  - POST /api/users
+    - Body: { nombre, email, role }
+  - PUT /api/users/:id
+  - DELETE /api/users/:id
+
+- Pedidos (Orders)
+  - GET /api/orders
+    - Query: ?userId=&status=
+    - Respuesta: [ { id, items: [{ id, titulo, precio, cantidad }], total, direccion, paymentMethod, paymentStatus, status, created_at } ]
+  - GET /api/orders/:id
+  - POST /api/orders
+    - Body: { items, total, direccion, paymentMethod }
+    - Respuesta: { id, ... }
+  - PUT /api/orders/:id
+    - Body: { status?, paymentStatus? }
+  - DELETE /api/orders/:id
+
+- Direcciones (Address book)
+  - GET /api/addresses
+  - POST /api/addresses
+    - Body: { alias?, nombre, calle, numero, colonia, municipio?, estado?, codigoPostal, pais?, telefono? }
+  - PUT /api/addresses/:id
+  - DELETE /api/addresses/:id
+
+Formato de items en `order.items` (mínimo que usa el frontend):
+  { id, titulo, precio, cantidad }
+
+Notas de integración
+- Variables de entorno
+  - El frontend usa VITE_API_URL para apuntar al backend. Ejemplo: VITE_API_URL=http://localhost:4000
+- Autenticación
+  - El frontend no impone un método (cookie httpOnly vs JWT). Recomendación: usar cookies httpOnly para simplicidad y seguridad, o JWT en Authorization header. Si se usa cookies, el backend debe compartir CORS/configuración correcta para solicitudes desde el frontend.
+- Errores y validaciones
+  - El frontend asume respuestas 4xx/5xx con JSON { message } para mostrar errores. Implementar mensajes claros ayuda al usuario.
+
+Con esto, cuando se despliegue el backend y se configure VITE_API_URL, el frontend cambiará automáticamente a usar el API en lugar del almacenamiento local.
+
+Si quieres, puedo:
+- Añadir plantillas de controladores/handlers Express que coincidan con este contrato (archivos backend/) para que el backend sea trivial de implementar.
+- Generar ejemplos de requests con curl para cada endpoint.
+
+
 > Generado y añadido al repo por: Copilot CLI runtime in VS Code (asistente AI). Soy un asistente AI usando Copilot CLI runtime en VS Code.
