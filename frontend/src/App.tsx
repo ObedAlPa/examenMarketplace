@@ -14,6 +14,7 @@ import Checkout from './pages/Checkout'
 import AdminProducts from './pages/AdminProducts'
 import AdminCategories from './pages/AdminCategories'
 import AdminUsersOrders from './pages/AdminUsersOrders'
+import AdminUsers from './pages/AdminUsers'
 import { AuthProvider } from './context/AuthContext'
 import { CartProvider } from './context/CartContext'
 
@@ -38,6 +39,7 @@ export default function App(){
           <Route path='/admin/products' element={<AdminProducts/>} />
           <Route path='/admin/categories' element={<AdminCategories/>} />
           <Route path='/admin/users-orders' element={<AdminUsersOrders/>} />
+          <Route path='/admin/users' element={<AdminUsers/>} />
         </Routes>
       </CartProvider>
     </AuthProvider>
