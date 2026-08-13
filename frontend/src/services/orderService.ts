@@ -37,4 +37,22 @@ export const createOrder = async (order: Order) => {
   return order
 }
 
-export default { fetchOrders, getOrderById, createOrder }
+export const updateOrder = async (id: string, patch: any) => {
+  await new Promise(res => setTimeout(res, 80))
+  const list = readAll()
+  const idx = list.findIndex((o:any) => o.id === id)
+  if (idx === -1) return null
+  list[idx] = { ...list[idx], ...patch }
+  writeAll(list)
+  return list[idx]
+}
+
+export const deleteOrder = async (id: string) => {
+  await new Promise(res => setTimeout(res, 80))
+  let list = readAll()
+  list = list.filter((o:any) => o.id !== id)
+  writeAll(list)
+  return true
+}
+
+export default { fetchOrders, getOrderById, createOrder, updateOrder, deleteOrder }
