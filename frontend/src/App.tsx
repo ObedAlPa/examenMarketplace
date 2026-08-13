@@ -11,6 +11,9 @@ import Orders from './pages/Orders'
 import OrderDetail from './pages/OrderDetail'
 import Cart from './pages/Cart'
 import Checkout from './pages/Checkout'
+import AdminProducts from './pages/AdminProducts'
+import AdminCategories from './pages/AdminCategories'
+import AdminUsersOrders from './pages/AdminUsersOrders'
 import { AuthProvider } from './context/AuthContext'
 import { CartProvider } from './context/CartContext'
 
@@ -30,6 +33,11 @@ export default function App(){
           <Route path='/account/addresses' element={<AddressBook/>} />
           <Route path='/cart' element={<Cart/>} />
           <Route path='/checkout' element={<Checkout/>} />
+
+          {/* Admin (mock) */}
+          <Route path='/admin/products' element={<AdminProducts/>} />
+          <Route path='/admin/categories' element={<AdminCategories/>} />
+          <Route path='/admin/users-orders' element={<AdminUsersOrders/>} />
         </Routes>
       </CartProvider>
     </AuthProvider>

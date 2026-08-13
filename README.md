@@ -161,6 +161,44 @@ Los siguientes usuarios de prueba se crean en `database/data.sql`. Contraseñas 
 - Estructura de carpetas inicial y placeholders para `frontend/`, `backend/`, `database/` creados.
 
 
+## Funcionalidades del frontend (estado)
+A continuación se lista el estado actual por vista/funcionalidad (mock/local, preparado para backend):
+
+1. Build frontend home page (mock) — Implementado ✅
+   - Home con listados de destacados y navegación.
+2. Build product catalog and detail pages (mock, imágenes placeholder) — Implementado ✅
+   - Catalog, ProductDetail; imágenes placeholder y productService como abstracción.
+3. Build cart and checkout UI (mock) — Implementado ✅
+   - Carrito (Cart), Checkout con validaciones y persistencia mock en localStorage vía services.
+4. Build login and registration UI (mock) — Implementado ✅
+   - Login y Register con validaciones y accesibilidad ARIA.
+5. Build buyer dashboard UI (mock) — Implementado (mínimo) ✅
+   - Orders (lista) y OrderDetail (recibo mínimo) disponibles; UX básico para historial y estados.
+6. Build admin dashboard - product CRUD UI (mock) — Parcial/Mock ⏳
+   - Interfaz mock añadida (lista + botones). CRUD todavía como mock; pendiente integrar productService o API para persistencia real.
+7. Build admin dashboard - category CRUD UI (mock) — Parcial/Mock ⏳
+   - Interfaz mock añadida (lista estático + botones). Persistencia pendiente.
+8. Build admin dashboard - users and orders UI (mock) — Parcial/Mock ⏳
+   - Vista de pedidos (admin) añadida y muestra pedidos mock. Gestión de usuarios no persistente en este momento.
+9. Update README with frontend functionalities — Actualizado ✅
+   - Esta sección (Funcionalidades) se ha añadido para reflejar el estado real. Se pueden añadir capturas de pantalla abajo.
+
+
+## Capturas de pantalla (placeholders)
+Se pueden añadir capturas en `docs/screenshots/` y referenciarlas aquí. De momento se listan placeholders que puedes reemplazar por imágenes reales:
+
+- Home — docs/screenshots/home.png (placeholder)
+- Catalog — docs/screenshots/catalog.png (placeholder)
+- ProductDetail — docs/screenshots/product-detail.png (placeholder)
+- Cart / Checkout — docs/screenshots/checkout.png (placeholder)
+- Orders / OrderDetail — docs/screenshots/order-detail.png (placeholder)
+- Admin — docs/screenshots/admin-products.png (placeholder)
+
+Para añadir imágenes reales:
+1. Crear la carpeta `docs/screenshots/` y guardar las capturas con los nombres indicados.
+2. Reemplazar los placeholders por enlaces relativos en este README: `![Home](docs/screenshots/home.png)`.
+
+
 ## Qué sigue (plan inmediato)
 1. Crear scripts SQL (`database/create_database.sql` y `database/data.sql`) y comitearlos.
 2. Implementar backend: autenticación, modelos y endpoints.
