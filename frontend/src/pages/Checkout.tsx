@@ -29,12 +29,76 @@ export default function Checkout(){
   const [pais] = useState('México')
   const [telefono, setTelefono] = useState('')
 
+  // validation state
+  const [errors, setErrors] = useState<Record<string, string>>({})
+
   const [cpLookupResult, setCpLookupResult] = useState<string[] | null>(null)
   const [cpError, setCpError] = useState<string | null>(null)
   const [loadingCp, setLoadingCp] = useState(false)
 
   const [paymentMethod, setPaymentMethod] = useState('Tarjeta simulada')
   const [submitting, setSubmitting] = useState(false)
+
+  const validate = () => {
+    const newErrors: Record<string, string> = {}
+    if (!nombre.trim()) newErrors.nombre = 'Nombre requerido'
+    else if (nombre.trim().length < 3) newErrors.nombre = 'Nombre muy corto'
+
+    if (!telefono.trim()) newErrors.telefono = 'Teléfono requerido'
+    else {
+      const digits = telefono.replace(/\D/g, '')
+      if (!/^\d{7,10}$/.test(digits)) newErrors.telefono = 'Teléfono inválido (7-10 dígitos)'
+    }
+
+    if (!codigoPostal.trim()) newErrors.codigoPostal = 'Código postal requerido'
+    else if (!/^\d{5}$/.test(codigoPostal)) newErrors.codigoPostal = 'Código postal debe tener 5 dígitos'
+
+    if (!calle.trim()) newErrors.calle = 'Calle requerida'
+    if (!numero.trim()) newErrors.numero = 'Número requerido'
+    if (!colonia.trim()) newErrors.colonia = 'Colonia requerida'
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
+  const validateField = (field: string, value: string) => {
+    const next = { ...errors }
+    switch (field) {
+      case 'nombre':
+        if (!value.trim()) next.nombre = 'Nombre requerido'
+        else if (value.trim().length < 3) next.nombre = 'Nombre muy corto'
+        else delete next.nombre
+        break
+      case 'telefono':
+        if (!value.trim()) next.telefono = 'Teléfono requerido'
+        else {
+          const digits = value.replace(/\D/g, '')
+          if (!/^\d{7,10}$/.test(digits)) next.telefono = 'Teléfono inválido (7-10 dígitos)'
+          else delete next.telefono
+        }
+        break
+      case 'codigoPostal':
+        if (!value.trim()) next.codigoPostal = 'Código postal requerido'
+        else if (!/^\d{5}$/.test(value)) next.codigoPostal = 'Código postal debe tener 5 dígitos'
+        else delete next.codigoPostal
+        break
+      case 'calle':
+        if (!value.trim()) next.calle = 'Calle requerida'
+        else delete next.calle
+        break
+      case 'numero':
+        if (!value.trim()) next.numero = 'Número requerido'
+        else delete next.numero
+        break
+      case 'colonia':
+        if (!value.trim()) next.colonia = 'Colonia requerida'
+        else delete next.colonia
+        break
+      default:
+        break
+    }
+    setErrors(next)
+  }
 
   // Debounce CP lookup
   useEffect(() => {
@@ -56,11 +120,24 @@ export default function Checkout(){
   }, [codigoPostal])
 
   const handleConfirm = () => {
-    // basic validation
-    if (!nombre || !calle || !numero || !colonia || !codigoPostal || !telefono) {
-      alert('Por favor completa todos los campos de dirección antes de confirmar.')
+    // run validations
+    if (loadingCp) {
+      setCpError('Espera a que termine la búsqueda del código postal.')
       return
     }
+    const ok = validate()
+    if (!ok) {
+      // focus first error field (basic)
+      const first = Object.keys(errors)[0]
+      if (first === 'nombre') document.querySelector('input[placeholder="Nombre del destinatario"]')?.focus()
+      else if (first === 'telefono') document.querySelector('input[placeholder="Teléfono"]')?.focus()
+      else if (first === 'codigoPostal') document.querySelector('input[placeholder="Código postal"]')?.focus()
+      else if (first === 'calle') document.querySelector('input[placeholder="Calle"]')?.focus()
+      else if (first === 'numero') document.querySelector('input[placeholder="Número"]')?.focus()
+      else if (first === 'colonia') document.querySelector('select')?.focus()
+      return
+    }
+
     setSubmitting(true)
     // create order in localStorage as mock
     const orders = JSON.parse(localStorage.getItem('tenomerca_orders') || '[]')
@@ -99,23 +176,51 @@ export default function Checkout(){
             <section className="md:col-span-2 bg-white p-4 rounded border border-border">
               <h4 className="font-semibold mb-3">Dirección de envío</h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <input value={nombre} onChange={e=>setNombre(e.target.value)} placeholder="Nombre del destinatario" className="p-2 border border-border rounded" />
-                <input value={telefono} onChange={e=>setTelefono(e.target.value)} placeholder="Teléfono" className="p-2 border border-border rounded" />
-                <input value={codigoPostal} onChange={e=>setCodigoPostal(e.target.value)} placeholder="Código postal" className="p-2 border border-border rounded" />
-                <div className="p-2">
+                <div>
+                  <input value={nombre} onChange={e=>{ setNombre(e.target.value); if (errors.nombre) validateField('nombre', e.target.value) }} onBlur={e=>validateField('nombre', e.target.value)} placeholder="Nombre del destinatario" className="p-2 border border-border rounded w-full" aria-invalid={!!errors.nombre} />
+                  {errors.nombre && <div className="text-sm text-red-600 mt-1">{errors.nombre}</div>}
+                </div>
+
+                <div>
+                  <input value={telefono} onChange={e=>{ setTelefono(e.target.value); if (errors.telefono) validateField('telefono', e.target.value) }} onBlur={e=>validateField('telefono', e.target.value)} placeholder="Teléfono" className="p-2 border border-border rounded w-full" aria-invalid={!!errors.telefono} />
+                  {errors.telefono && <div className="text-sm text-red-600 mt-1">{errors.telefono}</div>}
+                </div>
+
+                <div>
+                  <input value={codigoPostal} onChange={e=>{ setCodigoPostal(e.target.value); if (errors.codigoPostal) validateField('codigoPostal', e.target.value) }} onBlur={e=>validateField('codigoPostal', e.target.value)} placeholder="Código postal" className="p-2 border border-border rounded w-full" aria-invalid={!!errors.codigoPostal} />
                   {loadingCp && <div className="text-sm text-muted">Buscando colonias...</div>}
                   {cpError && <div className="text-sm text-red-600">{cpError}</div>}
+                  {errors.codigoPostal && <div className="text-sm text-red-600 mt-1">{errors.codigoPostal}</div>}
+                </div>
+
+                <div className="p-2">
                   {cpLookupResult && (
-                    <select value={colonia} onChange={e=>setColonia(e.target.value)} className="w-full p-2 border border-border rounded">
-                      <option value="">Selecciona colonia</option>
-                      {cpLookupResult.map(c => <option key={c} value={c}>{c}</option>)}
-                    </select>
+                    <>
+                      <select value={colonia} onChange={e=>{ setColonia(e.target.value); if (errors.colonia) validateField('colonia', e.target.value) }} onBlur={e=>validateField('colonia', e.target.value)} className="w-full p-2 border border-border rounded">
+                        <option value="">Selecciona colonia</option>
+                        {cpLookupResult.map(c => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                      {errors.colonia && <div className="text-sm text-red-600 mt-1">{errors.colonia}</div>}
+                    </>
                   )}
                 </div>
-                <input value={calle} onChange={e=>setCalle(e.target.value)} placeholder="Calle" className="p-2 border border-border rounded" />
-                <input value={numero} onChange={e=>setNumero(e.target.value)} placeholder="Número" className="p-2 border border-border rounded" />
-                <input value={municipio} onChange={e=>setMunicipio(e.target.value)} placeholder="Municipio/Delegación" className="p-2 border border-border rounded" />
-                <input value={estado} onChange={e=>setEstado(e.target.value)} placeholder="Estado" className="p-2 border border-border rounded" />
+
+                <div>
+                  <input value={calle} onChange={e=>{ setCalle(e.target.value); if (errors.calle) validateField('calle', e.target.value) }} onBlur={e=>validateField('calle', e.target.value)} placeholder="Calle" className="p-2 border border-border rounded w-full" aria-invalid={!!errors.calle} />
+                  {errors.calle && <div className="text-sm text-red-600 mt-1">{errors.calle}</div>}
+                </div>
+
+                <div>
+                  <input value={numero} onChange={e=>{ setNumero(e.target.value); if (errors.numero) validateField('numero', e.target.value) }} onBlur={e=>validateField('numero', e.target.value)} placeholder="Número" className="p-2 border border-border rounded w-full" aria-invalid={!!errors.numero} />
+                  {errors.numero && <div className="text-sm text-red-600 mt-1">{errors.numero}</div>}
+                </div>
+
+                <div>
+                  <input value={municipio} onChange={e=>setMunicipio(e.target.value)} placeholder="Municipio/Delegación" className="p-2 border border-border rounded w-full" />
+                </div>
+                <div>
+                  <input value={estado} onChange={e=>setEstado(e.target.value)} placeholder="Estado" className="p-2 border border-border rounded w-full" />
+                </div>
               </div>
 
               <h4 className="font-semibold mt-6 mb-3">Método de pago (simulado)</h4>
