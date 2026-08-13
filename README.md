@@ -66,7 +66,34 @@ Variables de entorno del frontend (archivo `.env` para Vite, p.e. `.env.local`):
 3. Configurar PostgreSQL y crear la base de datos (ver `database/create_database.sql` cuando esté listo).
 4. Crear archivo `.env` en `backend/` con las variables necesarias.
 5. Levantar backend: npm run dev (o comando que se documentará en la carpeta backend)
-6. Levantar frontend: npm run dev (documentado en frontend)
+
+Frontend — uso rápido
+
+6. Levantar frontend (pasos detallados):
+
+   1) Entrar a la carpeta del frontend:
+
+      cd frontend
+
+   2) Instalar dependencias (si no están instaladas):
+
+      npm install
+
+   3) Levantar el servidor de desarrollo (Vite):
+
+      npm run dev
+
+      Abrir en el navegador la URL que muestre Vite (normalmente http://localhost:5173).
+
+   4) Ejecutar tests unitarios (validadores):
+
+      npm run test
+
+   5) Build de producción (si se requiere):
+
+      npm run build
+
+   Nota: El frontend contiene validaciones de formulario, persistencia de carrito/pedidos en localStorage y tests unitarios para las funciones de validación (usar `npm run test`).
 
 
 ## Ejecutar la base de datos PostgreSQL y seeds desde la terminal de VS Code
