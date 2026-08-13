@@ -129,12 +129,12 @@ export default function Checkout(){
     if (!ok) {
       // focus first error field (basic)
       const first = Object.keys(errors)[0]
-      if (first === 'nombre') document.querySelector('input[placeholder="Nombre del destinatario"]')?.focus()
-      else if (first === 'telefono') document.querySelector('input[placeholder="Teléfono"]')?.focus()
-      else if (first === 'codigoPostal') document.querySelector('input[placeholder="Código postal"]')?.focus()
-      else if (first === 'calle') document.querySelector('input[placeholder="Calle"]')?.focus()
-      else if (first === 'numero') document.querySelector('input[placeholder="Número"]')?.focus()
-      else if (first === 'colonia') document.querySelector('select')?.focus()
+      if (first === 'nombre') document.getElementById('ship-name')?.focus()
+      else if (first === 'telefono') document.getElementById('ship-phone')?.focus()
+      else if (first === 'codigoPostal') document.getElementById('ship-cp')?.focus()
+      else if (first === 'calle') document.getElementById('ship-calle')?.focus()
+      else if (first === 'numero') document.getElementById('ship-numero')?.focus()
+      else if (first === 'colonia') document.getElementById('ship-colonia')?.focus()
       return
     }
 
@@ -177,49 +177,57 @@ export default function Checkout(){
               <h4 className="font-semibold mb-3">Dirección de envío</h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <input value={nombre} onChange={e=>{ setNombre(e.target.value); if (errors.nombre) validateField('nombre', e.target.value) }} onBlur={e=>validateField('nombre', e.target.value)} placeholder="Nombre del destinatario" className="p-2 border border-border rounded w-full" aria-invalid={!!errors.nombre} />
-                  {errors.nombre && <div className="text-sm text-red-600 mt-1">{errors.nombre}</div>}
+                  <label htmlFor="ship-name" className="block text-sm mb-1">Nombre del destinatario</label>
+                  <input id="ship-name" value={nombre} onChange={e=>{ setNombre(e.target.value); if (errors.nombre) validateField('nombre', e.target.value) }} onBlur={e=>validateField('nombre', e.target.value)} className="p-2 border border-border rounded w-full" aria-invalid={!!errors.nombre} aria-describedby={errors.nombre ? 'ship-name-error' : undefined} />
+                  {errors.nombre && <div id="ship-name-error" role="alert" className="text-sm text-red-600 mt-1">{errors.nombre}</div>}
                 </div>
 
                 <div>
-                  <input value={telefono} onChange={e=>{ setTelefono(e.target.value); if (errors.telefono) validateField('telefono', e.target.value) }} onBlur={e=>validateField('telefono', e.target.value)} placeholder="Teléfono" className="p-2 border border-border rounded w-full" aria-invalid={!!errors.telefono} />
-                  {errors.telefono && <div className="text-sm text-red-600 mt-1">{errors.telefono}</div>}
+                  <label htmlFor="ship-phone" className="block text-sm mb-1">Teléfono</label>
+                  <input id="ship-phone" value={telefono} onChange={e=>{ setTelefono(e.target.value); if (errors.telefono) validateField('telefono', e.target.value) }} onBlur={e=>validateField('telefono', e.target.value)} className="p-2 border border-border rounded w-full" aria-invalid={!!errors.telefono} aria-describedby={errors.telefono ? 'ship-phone-error' : undefined} />
+                  {errors.telefono && <div id="ship-phone-error" role="alert" className="text-sm text-red-600 mt-1">{errors.telefono}</div>}
                 </div>
 
                 <div>
-                  <input value={codigoPostal} onChange={e=>{ setCodigoPostal(e.target.value); if (errors.codigoPostal) validateField('codigoPostal', e.target.value) }} onBlur={e=>validateField('codigoPostal', e.target.value)} placeholder="Código postal" className="p-2 border border-border rounded w-full" aria-invalid={!!errors.codigoPostal} />
-                  {loadingCp && <div className="text-sm text-muted">Buscando colonias...</div>}
-                  {cpError && <div className="text-sm text-red-600">{cpError}</div>}
-                  {errors.codigoPostal && <div className="text-sm text-red-600 mt-1">{errors.codigoPostal}</div>}
+                  <label htmlFor="ship-cp" className="block text-sm mb-1">Código postal</label>
+                  <input id="ship-cp" value={codigoPostal} onChange={e=>{ setCodigoPostal(e.target.value); if (errors.codigoPostal) validateField('codigoPostal', e.target.value) }} onBlur={e=>validateField('codigoPostal', e.target.value)} className="p-2 border border-border rounded w-full" aria-invalid={!!errors.codigoPostal} aria-describedby={(errors.codigoPostal ? 'ship-cp-error' : '') + (cpError ? ' ship-cp-lookup' : '')} />
+                  {loadingCp && <div id="ship-cp-lookup" className="text-sm text-muted">Buscando colonias...</div>}
+                  {cpError && <div role="alert" className="text-sm text-red-600">{cpError}</div>}
+                  {errors.codigoPostal && <div id="ship-cp-error" role="alert" className="text-sm text-red-600 mt-1">{errors.codigoPostal}</div>}
                 </div>
 
                 <div className="p-2">
                   {cpLookupResult && (
                     <>
-                      <select value={colonia} onChange={e=>{ setColonia(e.target.value); if (errors.colonia) validateField('colonia', e.target.value) }} onBlur={e=>validateField('colonia', e.target.value)} className="w-full p-2 border border-border rounded">
+                      <label htmlFor="ship-colonia" className="block text-sm mb-1">Colonia</label>
+                      <select id="ship-colonia" value={colonia} onChange={e=>{ setColonia(e.target.value); if (errors.colonia) validateField('colonia', e.target.value) }} onBlur={e=>validateField('colonia', e.target.value)} className="w-full p-2 border border-border rounded" aria-describedby={errors.colonia ? 'ship-colonia-error' : undefined}>
                         <option value="">Selecciona colonia</option>
                         {cpLookupResult.map(c => <option key={c} value={c}>{c}</option>)}
                       </select>
-                      {errors.colonia && <div className="text-sm text-red-600 mt-1">{errors.colonia}</div>}
+                      {errors.colonia && <div id="ship-colonia-error" role="alert" className="text-sm text-red-600 mt-1">{errors.colonia}</div>}
                     </>
                   )}
                 </div>
 
                 <div>
-                  <input value={calle} onChange={e=>{ setCalle(e.target.value); if (errors.calle) validateField('calle', e.target.value) }} onBlur={e=>validateField('calle', e.target.value)} placeholder="Calle" className="p-2 border border-border rounded w-full" aria-invalid={!!errors.calle} />
-                  {errors.calle && <div className="text-sm text-red-600 mt-1">{errors.calle}</div>}
+                  <label htmlFor="ship-calle" className="block text-sm mb-1">Calle</label>
+                  <input id="ship-calle" value={calle} onChange={e=>{ setCalle(e.target.value); if (errors.calle) validateField('calle', e.target.value) }} onBlur={e=>validateField('calle', e.target.value)} className="p-2 border border-border rounded w-full" aria-invalid={!!errors.calle} aria-describedby={errors.calle ? 'ship-calle-error' : undefined} />
+                  {errors.calle && <div id="ship-calle-error" role="alert" className="text-sm text-red-600 mt-1">{errors.calle}</div>}
                 </div>
 
                 <div>
-                  <input value={numero} onChange={e=>{ setNumero(e.target.value); if (errors.numero) validateField('numero', e.target.value) }} onBlur={e=>validateField('numero', e.target.value)} placeholder="Número" className="p-2 border border-border rounded w-full" aria-invalid={!!errors.numero} />
-                  {errors.numero && <div className="text-sm text-red-600 mt-1">{errors.numero}</div>}
+                  <label htmlFor="ship-numero" className="block text-sm mb-1">Número</label>
+                  <input id="ship-numero" value={numero} onChange={e=>{ setNumero(e.target.value); if (errors.numero) validateField('numero', e.target.value) }} onBlur={e=>validateField('numero', e.target.value)} className="p-2 border border-border rounded w-full" aria-invalid={!!errors.numero} aria-describedby={errors.numero ? 'ship-numero-error' : undefined} />
+                  {errors.numero && <div id="ship-numero-error" role="alert" className="text-sm text-red-600 mt-1">{errors.numero}</div>}
                 </div>
 
                 <div>
-                  <input value={municipio} onChange={e=>setMunicipio(e.target.value)} placeholder="Municipio/Delegación" className="p-2 border border-border rounded w-full" />
+                  <label htmlFor="ship-municipio" className="block text-sm mb-1">Municipio/Delegación</label>
+                  <input id="ship-municipio" value={municipio} onChange={e=>setMunicipio(e.target.value)} className="p-2 border border-border rounded w-full" />
                 </div>
                 <div>
-                  <input value={estado} onChange={e=>setEstado(e.target.value)} placeholder="Estado" className="p-2 border border-border rounded w-full" />
+                  <label htmlFor="ship-estado" className="block text-sm mb-1">Estado</label>
+                  <input id="ship-estado" value={estado} onChange={e=>setEstado(e.target.value)} className="p-2 border border-border rounded w-full" />
                 </div>
               </div>
 
