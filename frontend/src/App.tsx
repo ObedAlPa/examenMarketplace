@@ -8,6 +8,7 @@ import Register from './pages/auth/Register'
 import Account from './pages/Account'
 import Orders from './pages/Orders'
 import Cart from './pages/Cart'
+import Checkout from './pages/Checkout'
 import { AuthProvider } from './context/AuthContext'
 import { CartProvider } from './context/CartContext'
 
@@ -24,6 +25,7 @@ export default function App(){
           <Route path='/account' element={<Account/>} />
           <Route path='/orders' element={<Orders/>} />
           <Route path='/cart' element={<Cart/>} />
+          <Route path='/checkout' element={<Checkout/>} />
         </Routes>
       </CartProvider>
     </AuthProvider>
