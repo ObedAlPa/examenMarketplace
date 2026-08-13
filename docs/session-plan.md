@@ -1,107 +1,83 @@
-﻿Plan de sesión — Frontend preparado para Backend
+Plan de sesión — Estado actual del proyecto TenoMerca
 
-Fecha: 2026-08-13T00:57:00-07:00
+Fecha de actualización: 2026-08-13T16:58:00-07:00
+
+Regla operativa del proyecto:
+- Todo cambio o implementación se hace directamente sobre main.
+- No se crean ramas para tareas ni para cambios puntuales.
+- Cada implementación o ajuste tiene su propio commit aislado y descriptivo.
+- Este archivo es el punto de contexto para cualquier sesión nueva, incluso si se abre desde otra cuenta o desde otro entorno, sin necesidad de reconstruir el historial mental.
 
 Contexto rápido:
-- Objetivo: terminar el frontend del proyecto TenoMerca (React + Vite + Tailwind) usando datos mock y dejarlo preparado para integrar el backend luego.
-- Requisitos del usuario: "solo lo mínimo que menciona el prompt"; frontend debe quedar preparado para que cuando exista backend todo funcione sin reescribir la UI.
+- Objetivo principal: finalizar la versión funcional del marketplace TenoMerca, manteniendo frontend y backend alineados con el contrato API y con una estrategia de commits directa sobre main.
+- Frontend: ya está desarrollado en modo mock con servicios preparados para API real.
+- Backend: ya existe un skeleton Express funcional con endpoints mínimos y datos en memoria, y quedó commitado directamente en main.
+- Requisito de trabajo: mantener cambios pequeños, revisables y commitados de forma individual.
 
-Resumen de lo ya completado (por vista / commit por vista):
-1. Home (mock) — Implementado
-   - Página principal con destacados y navegación. Archivo: frontend/src/pages/Home.tsx
-2. Catalog y ProductDetail (mock) — Implementado
-   - Catalogo, ProductDetail con placeholders de imagen. Usa frontend/src/services/productService.ts
-3. Cart y Checkout (mock) — Implementado
-   - Carrito, Checkout con validaciones, CP lookup mock y creación de pedidos (orderService). Redirección a /orders/:id.
-4. Login y Register (mock) — Implementado
-   - Validaciones, accesibilidad básica. Archivos: frontend/src/pages/auth/Login.tsx, Register.tsx
-5. Buyer dashboard — Implementado (mínimo)
-   - Orders list y OrderDetail (recibo mínimo). Archivos: frontend/src/pages/Orders.tsx, OrderDetail.tsx
-6. Admin — Product CRUD (mock) — Implementado
-   - productService con create/update/delete (localStorage fallback). UI admin: frontend/src/pages/AdminProducts.tsx (create form, inline edit + modal, delete).
-7. Admin — Category CRUD (mock) — Implementado
-   - categoryService (localStorage fallback) y UI admin: frontend/src/pages/AdminCategories.tsx
-8. Admin — Users & Orders (mock) — Implementado
-   - userService (localStorage fallback) y UI admin: frontend/src/pages/AdminUsers.tsx
-   - Admin orders UI: frontend/src/pages/AdminUsersOrders.tsx (status change, delete). orderService soporta update/delete.
-9. README — Actualizada
-   - Sección "Funcionalidades" añadida. Sección "API contract" añadida con rutas mínimas que el backend debe exponer. Archivo: README.md
+Resumen de lo ya completado:
+1. Frontend mock completo — Implementado
+  - Home, catalogo, detalle de producto, carrito, checkout, login, register, dashboard de comprador, panel admin de productos, categorías, usuarios y pedidos.
+  - Archivos principales: frontend/src/pages/* y frontend/src/services/*.
+2. Servicios preparados para backend real — Implementado
+  - productService, orderService, categoryService, userService, addressService.
+  - Todos aceptan dos modos:
+    1. Mock/local con localStorage cuando no hay VITE_API_URL.
+    2. API real cuando VITE_API_URL está definido.
+3. Contrato API documentado — Implementado
+  - README actualizado con rutas mínimas del backend y estructura esperada.
+4. Backend skeleton mínimo funcional — Implementado y commitado en main
+  - Commit actual: 2bfb387 feat: add backend API skeleton
+  - Endpoints incluidos: auth, products, categories, users, orders, addresses.
+  - Datos semilla en memoria para pruebas locales.
+5. Validación básica del backend — Implementado
+  - Smoke tests con supertest para health, auth/login y listado de productos.
 
-Servicios y abstracciones:
-- services/ (productService, orderService, categoryService, userService, addressService, form validators)
-  - Todos los servicios soportan dos modos:
-    1. Mock/local: si VITE_API_URL no está definida, usan localStorage (mismo comportamiento actual en dev)
-    2. API: si VITE_API_URL está definida, hacen fetch a endpoints REST estándar (/api/...).
-  - Esto permite que cuando el backend esté listo, solo sea necesario definir VITE_API_URL y el frontend usará el API sin cambios de UI.
+Estado actual del proyecto:
+- Frontend mock listo para integración con backend.
+- Backend skeleton listo y funcionando localmente en http://localhost:4000.
+- Todo el trabajo se mantiene en main y cada incremento va en un commit separado.
 
-Pruebas (tests):
-- Vitest + jsdom (dev dependency instalado localmente).
-- Tests implementados y pasando:
-  - frontend/src/services/form.test.ts (validadores)
-  - frontend/src/services/userService.test.ts
-  - frontend/src/services/productService.test.ts
-  - frontend/src/services/categoryService.test.ts
-  - frontend/src/services/orderService.test.ts
-- Resultado local: todos los tests pasan (20 tests en total al final).
+Qué falta para cerrar la siguiente etapa:
+1. Reforzar la autenticación por roles y middleware de acceso.
+2. Conectar el frontend con el backend real mediante VITE_API_URL.
+3. Validar CORS, errores 4xx/5xx, payloads y mensajes del API.
+4. Mover la persistencia de memoria a PostgreSQL real.
+5. Añadir protección de rutas admin y pruebas de integración si se requiere.
 
-Cambios adicionales de UX/Accesibilidad:
-- Reemplacé prompts/alerts nativos por SimpleModal (frontend/src/components/ui/SimpleModal.tsx) y validaciones inline en admin views.
-- Navbar ahora muestra submenu Admin cuando el user tiene role === 'admin'.
+Plan de trabajo recomendado (por commits directos a main):
+1. Commit backend skeleton (ya realizado): Express + endpoints base + seed data.
+2. Commit siguiente: middlewares de autenticación y autorización por rol.
+3. Commit siguiente: integración del frontend con VITE_API_URL y manejo inicial de errores en frontend.
+4. Commit siguiente: migración de persistencia a PostgreSQL o DB real.
+5. Commit siguiente: refinamiento de UX / validaciones / seguridad y soporte de entorno de producción.
 
-Estado actual: ¿Qué falta para "terminado" según el objetivo?
-- Tareas obligatorias para considerar el frontend "listo para backend" (prioridad alta):
-  1. Confirmar convención de autenticación (cookies httpOnly vs JWT). README sugiere ambas; definir una facilitará la integración del backend. (recomendado: cookies httpOnly en conjunto con CORS y SameSite/secure)
-  2. Backend skeleton (endpoints) que cumpla el "API contract" del README. Endpoints mínimos:
-     - Auth: POST /api/auth/login, POST /api/auth/register, GET /api/auth/me
-     - Products: GET /api/products, GET /api/products/:id, POST /api/products, PUT /api/products/:id, DELETE /api/products/:id
-     - Categories: GET/POST/PUT/DELETE /api/categories
-     - Users: GET/POST/PUT/DELETE /api/users (admin)
-     - Orders: GET/POST/GET by id/PUT/DELETE /api/orders
-     - Addresses: GET/POST/PUT/DELETE /api/addresses
-  3. Asegurar que VITE_API_URL esté documentada y usada en deploys y .env (README ya lo menciona).
+Reglas de commits y ramas:
+- Nunca crear ramas para tareas normales.
+- Hacer commits directos sobre main.
+- Cada cambio debe tener su propio commit, y cada commit debe responder a una pieza funcional claramente identificable.
+- Si se realiza trabajo de investigación o corrección, también se commitea por bloque, no se acumula todo junto.
 
-- Tareas recomendadas (no obligatorias, pero facilitan la integración):
-  - Añadir apiClient central (fetch wrapper) con manejo de errors, inyección de token y uniformidad de headers.
-  - Añadir tests para integración de services con mock server (supertest o msw) si se quiere cobertura más profunda.
-  - Ajustes de UX: usar input type=number para precio, focus-trap y cerrar con ESC en SimpleModal.
-  - Protección de rutas admin (client-side) para evitar que usuarios no-admin naveguen a /admin/* (ya hay checks en navbar, pero proteger rutas evita acceso directo por URL).
+Contexto para otra sesión o otra cuenta:
+- Si una sesión nueva se abre desde otra cuenta o desde otra máquina, este archivo debe leerse antes de seguir.
+- La referencia de trabajo actual es: frontend mock completado + backend skeleton funcional + commits directos a main.
+- La continuidad correcta es seguir con la autenticación por roles, luego frontend real con VITE_API_URL y luego persistencia real.
 
-Plan recomendado para pasar al backend (pasos concretos)
-1. (Opcional) Crear un pequeño "backend skeleton" en /backend que implemente los endpoints listados utilizando Express y una capa de persistencia mínima (Postgres o incluso in-memory/SQLite) para permitir pruebas locales.
-2. Decidir y documentar el método de autenticación en el README (cookies httpOnly preferidas). Implementar endpoints de auth en backend skeleton.
-3. Desplegar backend local y definir VITE_API_URL=http://localhost:4000 en frontend/.env.local. Verificar que las vistas consumen el API y que las funcionalidades mock pasan a ser reales.
-4. Iterar sobre problemas: CORS, manejo de archivos (imágenes), formatos de fecha, errores 4xx/5xx y mensajes.
-
-Archivos clave (referencia rápida)
-- frontend/src/pages/* (Home, Catalog, ProductDetail, Cart, Checkout, Orders, OrderDetail, Admin*)
-- frontend/src/services/* (productService, orderService, userService, categoryService, addressService, form.ts)
-- frontend/src/components/ui/SimpleModal.tsx
-- README.md (sección API contract actualizada)
-- Tests: frontend/src/services/*.test.ts
-
-Checkpoint / Entregables actuales
-- Frontend completo (UI) en modo mock con servicios que soportan switch a backend definindo VITE_API_URL.
-- Tests unitarios para services y validadores.
-- Documentación del contrato API para que el backend implemente exactamente lo que el frontend espera.
-
-Siguientes acciones que puedo ejecutar ahora (elige o confirmo la siguiente por defecto):
-- Generar un backend skeleton Express con handlers mínimos que respeten el API contract (crea archivos en /backend). Tiempo estimado: 1–2 h para un skeleton básico.
-- Implementar apiClient central en frontend para uniformizar llamadas y añadir manejo de tokens/errores. Tiempo estimado: 30–60 min.
-- Proteger rutas admin en frontend (guard) y agregar tests de integración básicos. Tiempo estimado: 30–60 min.
-
----
-Plan creado por: Copilot CLI runtime in VS Code (asistente AI)
+Archivos clave del proyecto:
+- README.md
+- design.md
+- docs/copilot-prompt.md
+- docs/session-plan.md
+- frontend/src/pages/*
+- frontend/src/services/*
+- backend/src/app.js
+- backend/src/server.js
+- backend/src/data.js
 
 Nota sobre el prompt de Copilot:
+- El archivo docs/copilot-prompt.md es la referencia oficial para la sesión y define stack, reglas, arquitectura y estrategia de trabajo.
+- Este session-plan.md sirve como resumen vivo del estado actual y de la secuencia de trabajo para continuar sin perder contexto.
 
-El "Prompt para GitHub Copilot (VS Code) — Marketplace México v2" se ha versionado y colocado como archivo en el repositorio para evitar duplicados temporales y para que sea fácil de mantener y revisar.
-
-- Archivo con el prompt: [docs/copilot-prompt.md](C:/proyectos/examenMarketplace/examenMarketplace.worktrees/revision-sesion-plan-proyecto/docs/copilot-prompt.md)
-
-Dónde y cómo usarlo:
-
-- Pegar **todo** el contenido de `docs/copilot-prompt.md` directamente en el chat de GitHub Copilot dentro de VS Code cuando se inicie una sesión nueva destinada a desarrollar o continuar este proyecto.
-- Ese prompt define el rol (desarrollador full-stack senior), el stack, las reglas de diseño (design.md), y la estrategia de commits; por tanto debe ser la "fuente de verdad" para que Copilot actúe coherentemente con las decisiones del proyecto.
-- No mantener copias redundantes en la carpeta de session-state. La copia temporal que existía en session-state fue eliminada y ahora la versión controlada en `docs/copilot-prompt.md` es la referencia oficial.
-
-Si necesita que el prompt se incluya en otro lugar (por ejemplo README o design.md) indique dónde y lo hago.
+---
+Último estado registrado:
+- Backend skeleton implementado y guardado en main.
+- El siguiente bloque de trabajo está definido y listo para continuar sin ramas ni pérdida de contexto.
