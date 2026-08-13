@@ -1,10 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import { useCart } from '../../context/CartContext'
 
 export default function Navbar(){
   const auth = useAuth()
   const navigate = useNavigate()
+  const { count } = useCart()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement | null>(null)
 
@@ -56,7 +58,9 @@ export default function Navbar(){
             </div>
           )}
 
-          <Link to="/cart" className="bg-primary text-white px-3 py-1 rounded">Carrito</Link>
+          <Link to="/cart" className="relative bg-primary text-white px-3 py-1 rounded">Carrito
+                      <span className="absolute -top-2 -right-2 bg-white text-primary rounded-full w-5 h-5 flex items-center justify-center text-xs border border-border">{count}</span>
+          </Link>
         </div>
       </div>
     </header>

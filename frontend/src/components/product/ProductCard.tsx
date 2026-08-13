@@ -9,7 +9,15 @@ type Product = {
   archivo_url?: string;
 }
 
+import { useCart } from '../../context/CartContext'
+
 export default function ProductCard({product}:{product:Product}){
+  const { addItem } = useCart()
+
+  const handleAdd = () => {
+    addItem({ id: product.id, titulo: product.titulo, precio: product.precio, archivo_url: product.archivo_url }, 1)
+  }
+
   return (
     <div className="bg-surface border border-border rounded-lg p-4 shadow-sm">
       <Link to={`/product/${product.id}`} className="block">
@@ -23,7 +31,7 @@ export default function ProductCard({product}:{product:Product}){
         <span className={`px-2 py-1 rounded text-sm ${product.stock>0? 'bg-success text-white':'bg-gray-200 text-muted'}`}>
           {product.stock>0? 'En stock':'Agotado'}
         </span>
-        <button className="bg-primary text-white px-3 py-1 rounded">Agregar</button>
+        <button onClick={handleAdd} className="bg-primary text-white px-3 py-1 rounded">Agregar</button>
       </div>
     </div>
   )
