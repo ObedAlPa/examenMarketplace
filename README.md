@@ -69,6 +69,65 @@ Variables de entorno del frontend (archivo `.env` para Vite, p.e. `.env.local`):
 6. Levantar frontend: npm run dev (documentado en frontend)
 
 
+## Ejecutar la base de datos PostgreSQL y seeds desde la terminal de VS Code
+A continuación se muestran comandos y pasos para crear la base de datos y ejecutar los scripts SQL (Windows / PowerShell). Desde VS Code: Abrir Terminal -> New Terminal (PowerShell) y ejecutar los siguientes pasos.
+
+1) (Opcional) Usando una instalación local de PostgreSQL (psql debe estar en PATH)
+
+- Crear la base de datos (reemplazar <PGUSER> y <PGPASSWORD> si aplica):
+  psql -h localhost -p 5432 -U <PGUSER> -c "CREATE DATABASE marketplace_dev;"
+
+- Ejecutar el script DDL (create_database.sql):
+  psql -h localhost -p 5432 -U <PGUSER> -d marketplace_dev -f database/create_database.sql
+
+- Ejecutar el script de seeds (data.sql):
+  psql -h localhost -p 5432 -U <PGUSER> -d marketplace_dev -f database/data.sql
+
+Notas:
+- Si psql solicita contraseña, introdúcela cuando se pida (o exporta PGPASSWORD en la sesión: $env:PGPASSWORD='tu_contraseña').
+- El script create_database.sql intenta crear la extensión pgcrypto (gen_random_uuid()). Crear extensiones requiere permisos de superusuario. Si no tienes permisos de superuser, ejecuta los pasos con un rol que sí los tenga o modifica el DDL para generar UUIDs desde la aplicación.
+
+2) (Alternativa) Usando Docker (recomendado si no quieres instalar PostgreSQL localmente)
+
+- Levantar un contenedor PostgreSQL (ejemplo):
+  docker run --name examen-pg -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=marketplace_dev -p 5432:5432 -d postgres:14
+
+- Esperar a que el contenedor arranque y luego ejecutar los scripts desde la máquina host (si psql está instalado) o ejecutar psql dentro del contenedor:
+  docker exec -it examen-pg bash
+  psql -U postgres -d marketplace_dev -f /workspace/database/create_database.sql    # si montaste /workspace
+
+- Si prefieres copiar los archivos al contenedor temporalmente:
+  docker cp database/create_database.sql examen-pg:/tmp/create_database.sql
+  docker cp database/data.sql examen-pg:/tmp/data.sql
+  docker exec -it examen-pg psql -U postgres -d marketplace_dev -f /tmp/create_database.sql
+  docker exec -it examen-pg psql -U postgres -d marketplace_dev -f /tmp/data.sql
+
+3) Validaciones rápidas (después de ejecutar los scripts)
+- Listar tablas: psql -U <PGUSER> -d marketplace_dev -c "\dt"
+- Ver roles: psql -U <PGUSER> -d marketplace_dev -c "SELECT id, name FROM roles;"
+- Ver usuarios: psql -U <PGUSER> -d marketplace_dev -c "SELECT email, nombre, created_at FROM usuarios;"
+
+4) Problemas comunes
+- Error al crear extensión pgcrypto -> necesitas permisos de superusuario. Si usas Docker con la imagen oficial, el usuario 'postgres' crea extensiones sin problema.
+- psql no está en PATH -> instalar cliente PostgreSQL o usar Docker + psql dentro del contenedor.
+
+Si quieres, puedo añadir comandos concretos para PowerShell que exporten temporalmente PGPASSWORD o scripts .ps1 para automatizar estos pasos.
+
+
+
+
+
+## Usuarios de prueba
+Los siguientes usuarios de prueba se crean en `database/data.sql`. Contraseñas plaintext para evaluación y pruebas locales (usar solo en entorno de desarrollo):
+
+- Admin
+  - Email: admin@tenomerca.test
+  - Contraseña: AdminPass123!
+
+- Comprador
+  - Email: buyer@tenomerca.test
+  - Contraseña: BuyerPass123!
+
 ## Estado actual
 - design.md creado y comiteado.
 - .gitignore creado y comiteado.
