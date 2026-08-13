@@ -2,8 +2,11 @@ import React, { useEffect, useState } from 'react'
 import Navbar from '../components/ui/Navbar'
 import productService from '../services/productService'
 import { v4 as uuidv4 } from 'uuid'
+import SimpleModal from '../components/ui/SimpleModal'
 
 export default function AdminProducts(){
+  // ... rest of component
+
   const [products, setProducts] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
 
@@ -23,17 +26,45 @@ export default function AdminProducts(){
     setLoading(false)
   }
 
+  const [errors, setErrors] = useState<{titulo?: string; precio?: string}>({})
+
   const handleCreate = async () => {
-    if (!titulo) return alert('Título requerido')
-    const p = { id: 'PRD-' + Date.now(), titulo, precio: Number(precio) || 0, categoria }
+    const nextErr: any = {}
+    if (!titulo || titulo.trim().length < 1) nextErr.titulo = 'Título requerido'
+    const precioNum = Number(precio)
+    if (!precio || isNaN(precioNum) || precioNum <= 0) nextErr.precio = 'Precio debe ser mayor a 0'
+    setErrors(nextErr)
+    if (Object.keys(nextErr).length > 0) return
+
+    const p = { id: 'PRD-' + Date.now(), titulo: titulo.trim(), precio: precioNum, categoria }
     await productService.createProduct(p)
     setTitulo(''); setPrecio(''); setCategoria('')
     await load()
   }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Eliminar producto mock?')) return
-    await productService.deleteProduct(id)
+  // delete modal flow
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
+  const confirmDelete = (id: string) => { setDeleteTarget(id); setShowDeleteModal(true) }
+  const doDelete = async () => { if (!deleteTarget) return; await productService.deleteProduct(deleteTarget); setShowDeleteModal(false); setDeleteTarget(null); await load() }
+
+  // edit modal flow
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editTarget, setEditTarget] = useState<any | null>(null)
+  const [editTitulo, setEditTitulo] = useState('')
+  const [editPrecio, setEditPrecio] = useState('')
+  const openEdit = (p: any) => { setEditTarget(p); setEditTitulo(p.titulo || ''); setEditPrecio(String(p.precio || '0')); setShowEditModal(true) }
+  const doEdit = async () => {
+    const nextErr: any = {}
+    if (!editTitulo || editTitulo.trim().length < 1) nextErr.titulo = 'Título requerido'
+    const precioNum = Number(editPrecio)
+    if (!editPrecio || isNaN(precioNum) || precioNum <= 0) nextErr.precio = 'Precio debe ser mayor a 0'
+    setErrors(nextErr)
+    if (Object.keys(nextErr).length > 0) return
+    if (!editTarget) return
+    await productService.updateProduct(editTarget.id, { titulo: editTitulo.trim(), precio: precioNum })
+    setShowEditModal(false)
+    setEditTarget(null)
     await load()
   }
 
@@ -51,9 +82,17 @@ export default function AdminProducts(){
           <p className="mb-4 text-sm text-muted">Vista mock para crear/editar/eliminar productos. Persistencia local (mock) mediante productService; reemplazar por API en backend.</p>
 
           <div className="mb-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
-            <input className="p-2 border border-border rounded" placeholder="Título" value={titulo} onChange={e=>setTitulo(e.target.value)} />
-            <input className="p-2 border border-border rounded" placeholder="Precio" value={precio} onChange={e=>setPrecio(e.target.value)} />
-            <input className="p-2 border border-border rounded" placeholder="Categoría" value={categoria} onChange={e=>setCategoria(e.target.value)} />
+            <div>
+              <input className="p-2 border border-border rounded w-full" placeholder="Título" value={titulo} onChange={e=>setTitulo(e.target.value)} />
+              {errors.titulo && <div className="text-sm text-red-600 mt-1">{errors.titulo}</div>}
+            </div>
+            <div>
+              <input className="p-2 border border-border rounded w-full" placeholder="Precio" value={precio} onChange={e=>setPrecio(e.target.value)} />
+              {errors.precio && <div className="text-sm text-red-600 mt-1">{errors.precio}</div>}
+            </div>
+            <div>
+              <input className="p-2 border border-border rounded w-full" placeholder="Categoría" value={categoria} onChange={e=>setCategoria(e.target.value)} />
+            </div>
           </div>
           <div className="mb-6">
             <button className="px-3 py-2 bg-primary text-white rounded" onClick={handleCreate}>Crear producto (mock)</button>
@@ -71,15 +110,38 @@ export default function AdminProducts(){
                     <input className="p-1 border border-border rounded text-sm w-40" defaultValue={p.titulo} onBlur={e=>{ if (e.target.value !== p.titulo) handleInlineUpdate(p.id, { titulo: e.target.value }) }} />
                     <input className="p-1 border border-border rounded text-sm w-24" defaultValue={String(p.precio)} onBlur={e=>{ const v = Number(e.target.value) || 0; if (v !== p.precio) handleInlineUpdate(p.id, { precio: v }) }} />
                     <input className="p-1 border border-border rounded text-sm w-32" defaultValue={p.categoria} onBlur={e=>{ if (e.target.value !== p.categoria) handleInlineUpdate(p.id, { categoria: e.target.value }) }} />
-                    <button className="px-2 py-1 border border-border rounded text-sm" onClick={()=>{ const newTitle = prompt('Nuevo título', p.titulo); if (newTitle && newTitle !== p.titulo) handleInlineUpdate(p.id, { titulo: newTitle }) }}>Editar</button>
-                    <button className="px-2 py-1 border border-border rounded text-sm" onClick={()=>handleDelete(p.id)}>Eliminar</button>
+                    <button className="px-2 py-1 border border-border rounded text-sm" onClick={()=>openEdit(p)}>Editar</button>
+                    <button className="px-2 py-1 border border-border rounded text-sm" onClick={()=>confirmDelete(p.id)}>Eliminar</button>
                   </div>
                 </div>
               ))
             )}
           </div>
         </div>
+
+        {/* Modals */}
+        {/** import SimpleModal dynamically to avoid circularity issues */}
       </main>
-    </div>
+
+      <SimpleModal visible={showDeleteModal} title="Eliminar producto" onCancel={()=>{ setShowDeleteModal(false); setDeleteTarget(null) }} onConfirm={doDelete} confirmText="Eliminar" cancelText="Cancelar">
+        <p>¿Estás seguro de eliminar este producto mock? Esta acción no se puede deshacer en el mock local.</p>
+      </SimpleModal>
+
+      <SimpleModal visible={showEditModal} title="Editar producto" onCancel={()=>{ setShowEditModal(false); setEditTarget(null) }} onConfirm={doEdit} confirmText="Guardar" cancelText="Cancelar">
+        <div className="grid grid-cols-1 gap-2">
+          <div>
+            <label className="block text-sm mb-1">Título</label>
+            <input className="p-2 border border-border rounded w-full" value={editTitulo} onChange={e=>setEditTitulo(e.target.value)} />
+            {errors.titulo && <div className="text-sm text-red-600 mt-1">{errors.titulo}</div>}
+          </div>
+          <div>
+            <label className="block text-sm mb-1">Precio</label>
+            <input className="p-2 border border-border rounded w-full" value={editPrecio} onChange={e=>setEditPrecio(e.target.value)} />
+            {errors.precio && <div className="text-sm text-red-600 mt-1">{errors.precio}</div>}
+          </div>
+        </div>
+      </SimpleModal>
+
+      </div>
   )
 }

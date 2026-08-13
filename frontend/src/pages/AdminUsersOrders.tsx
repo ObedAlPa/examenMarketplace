@@ -1,8 +1,15 @@
 import React, { useEffect, useState } from 'react'
 import Navbar from '../components/ui/Navbar'
 import orderService from '../services/orderService'
+import SimpleModal from '../components/ui/SimpleModal'
 
 export default function AdminUsersOrders(){
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
+
+  const confirmDelete = (id: string) => { setDeleteTarget(id); setShowDeleteModal(true) }
+  const doDelete = async () => { if (!deleteTarget) return; await orderService.deleteOrder(deleteTarget); setShowDeleteModal(false); setDeleteTarget(null); await load() }
+
   const [orders, setOrders] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
 
@@ -51,7 +58,7 @@ export default function AdminUsersOrders(){
                           <option>Entregado</option>
                           <option>Cancelado</option>
                         </select>
-                        <button className="px-2 py-1 border border-border rounded text-sm" onClick={()=>handleDelete(o.id)}>Eliminar</button>
+                        <button className="px-2 py-1 border border-border rounded text-sm" onClick={()=>confirmDelete(o.id)}>Eliminar</button>
                       </div>
                     </div>
                   </div>
@@ -59,6 +66,10 @@ export default function AdminUsersOrders(){
               ))}
             </div>
           )}
+
+          <SimpleModal visible={showDeleteModal} title="Eliminar pedido" onCancel={()=>{ setShowDeleteModal(false); setDeleteTarget(null) }} onConfirm={doDelete} confirmText="Eliminar" cancelText="Cancelar">
+            <p>¿Eliminar este pedido mock? Esta acción quitará el pedido de la lista local.</p>
+          </SimpleModal>
         </div>
       </main>
     </div>

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import Navbar from '../components/ui/Navbar'
 import categoryService from '../services/categoryService'
+import SimpleModal from '../components/ui/SimpleModal'
 
 export default function AdminCategories(){
   const [categories, setCategories] = useState<any[]>([])
@@ -11,26 +12,27 @@ export default function AdminCategories(){
 
   const load = async () => { setLoading(true); const c = await categoryService.fetchCategories(); setCategories(c); setLoading(false) }
 
+  const [error, setError] = useState<string | null>(null)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editTarget, setEditTarget] = useState<any | null>(null)
+  const [editName, setEditName] = useState('')
+
   const handleCreate = async () => {
-    if (!name) return alert('Nombre requerido')
-    const cat = { id: 'CAT-' + Date.now(), nombre: name }
+    if (!name || name.trim().length === 0) { setError('Nombre requerido'); return }
+    setError(null)
+    const cat = { id: 'CAT-' + Date.now(), nombre: name.trim() }
     await categoryService.createCategory(cat)
     setName('')
     await load()
   }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Eliminar categoría mock?')) return
-    await categoryService.deleteCategory(id)
-    await load()
-  }
+  const confirmDelete = (id: string) => { setDeleteTarget(id); setShowDeleteModal(true) }
+  const doDelete = async () => { if (!deleteTarget) return; await categoryService.deleteCategory(deleteTarget); setShowDeleteModal(false); setDeleteTarget(null); await load() }
 
-  const handleUpdate = async (id: string) => {
-    const nuevo = prompt('Nuevo nombre')
-    if (!nuevo) return
-    await categoryService.updateCategory(id, { nombre: nuevo })
-    await load()
-  }
+  const openEdit = (c: any) => { setEditTarget(c); setEditName(c.nombre || ''); setShowEditModal(true) }
+  const doEdit = async () => { if (!editName || editName.trim().length === 0) { setError('Nombre requerido'); return } await categoryService.updateCategory(editTarget.id, { nombre: editName.trim() }); setShowEditModal(false); setEditTarget(null); await load() }
 
   return (
     <div className="min-h-screen">
@@ -41,7 +43,10 @@ export default function AdminCategories(){
           <p className="mb-4 text-sm text-muted">Gestión de categorías (mock). Interfaz mínima: lista y creación rápida. Persistencia local usando categoryService.</p>
 
           <div className="mb-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
-            <input className="p-2 border border-border rounded" placeholder="Nombre de categoría" value={name} onChange={e=>setName(e.target.value)} />
+            <div>
+              <input className="p-2 border border-border rounded w-full" placeholder="Nombre de categoría" value={name} onChange={e=>setName(e.target.value)} />
+              {error && <div className="text-sm text-red-600 mt-1">{error}</div>}
+            </div>
             <div className="sm:col-span-2">
               <button className="px-3 py-2 bg-primary text-white rounded" onClick={handleCreate}>Crear categoría (mock)</button>
             </div>
@@ -54,12 +59,23 @@ export default function AdminCategories(){
                   <div className="font-semibold">{c.nombre || c.name || c.id}</div>
                 </div>
                 <div className="space-x-2">
-                  <button className="px-2 py-1 border border-border rounded text-sm" onClick={()=>handleUpdate(c.id)}>Editar</button>
-                  <button className="px-2 py-1 border border-border rounded text-sm" onClick={()=>handleDelete(c.id)}>Eliminar</button>
+                  <button className="px-2 py-1 border border-border rounded text-sm" onClick={()=>openEdit(c)}>Editar</button>
+                  <button className="px-2 py-1 border border-border rounded text-sm" onClick={()=>confirmDelete(c.id)}>Eliminar</button>
                 </div>
               </div>
             ))}
           </div>
+
+          <SimpleModal visible={showDeleteModal} title="Eliminar categoría" onCancel={()=>{ setShowDeleteModal(false); setDeleteTarget(null) }} onConfirm={doDelete} confirmText="Eliminar" cancelText="Cancelar">
+            <p>¿Eliminar esta categoría (mock)?</p>
+          </SimpleModal>
+
+          <SimpleModal visible={showEditModal} title="Editar categoría" onCancel={()=>{ setShowEditModal(false); setEditTarget(null) }} onConfirm={doEdit} confirmText="Guardar" cancelText="Cancelar">
+            <div>
+              <label className="block text-sm mb-1">Nombre</label>
+              <input className="p-2 border border-border rounded w-full" value={editName} onChange={e=>setEditName(e.target.value)} />
+            </div>
+          </SimpleModal>
         </div>
       </main>
     </div>
