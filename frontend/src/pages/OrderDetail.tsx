@@ -30,7 +30,7 @@ export default function OrderDetail(){
     <div className="min-h-screen">
       <Navbar />
       <main className="max-w-4xl mx-auto p-4">
-        <h1 className="text-2xl font-bold mb-4">Recibo mínimo — Pedido {order.id}</h1>
+        <h1 className="text-2xl font-bold mb-4">Detalle del pedido {order.id}</h1>
         <div className="bg-white p-4 rounded border border-border">
           <div className="flex justify-between items-start">
             <div>
