@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import Navbar from '../components/ui/Navbar'
 import { useCart } from '../context/CartContext'
 import { useNavigate } from 'react-router-dom'
+import * as addressService from '../services/addressService'
 
 // Mock postal code lookup - in production this will call a postal code API (SEPOMEX or similar)
 const mockCpLookup = async (cp: string) => {
@@ -28,6 +29,11 @@ export default function Checkout(){
   const [codigoPostal, setCodigoPostal] = useState('')
   const [pais] = useState('México')
   const [telefono, setTelefono] = useState('')
+
+  // addresses
+  const [savedAddresses, setSavedAddresses] = useState<addressService.Address[]>([])
+  const [useSavedAddressId, setUseSavedAddressId] = useState<string | null>(null)
+  const [saveToAccount, setSaveToAccount] = useState(false)
 
   // validation state
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -74,7 +80,14 @@ export default function Checkout(){
     return () => clearTimeout(t)
   }, [codigoPostal])
 
-  const handleConfirm = () => {
+  // Load saved addresses (from address service mock) so the UI is ready for backend integration
+  useEffect(() => {
+    let mounted = true
+    addressService.fetchAddresses().then(list => { if (mounted) setSavedAddresses(list) })
+    return () => { mounted = false }
+  }, [])
+
+  const handleConfirm = async () => {
     // run validations
     if (loadingCp) {
       setCpError('Espera a que termine la búsqueda del código postal.')
@@ -107,10 +120,23 @@ export default function Checkout(){
       status: 'Pendiente',
       created_at: new Date().toISOString()
     }
+
+    // if user asked to save this address to their account, call the addressService (mock/localStorage) — when backend is ready this will be an API call
+    if (saveToAccount) {
+      try {
+        await addressService.createAddress({ alias: '', nombre, calle, numero, colonia, municipio, estado, codigoPostal, pais, telefono } as any)
+      } catch (e) {
+        console.warn('No se pudo guardar la dirección localmente', e)
+      }
+    }
+
     orders.push(order)
     localStorage.setItem('tenomerca_orders', JSON.stringify(orders))
     // clear cart
     clear()
+    // reload saved addresses for UI consistency
+    const list = await addressService.fetchAddresses()
+    setSavedAddresses(list)
     setTimeout(() => {
       setSubmitting(false)
       // redirect to order detail
@@ -132,6 +158,32 @@ export default function Checkout(){
             <section className="md:col-span-2 bg-white p-4 rounded border border-border">
               <h4 className="font-semibold mb-3">Dirección de envío</h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {savedAddresses.length > 0 && (
+                  <div className="sm:col-span-2">
+                    <label className="block text-sm mb-1">Usar una dirección guardada</label>
+                    <select value={useSavedAddressId || ''} onChange={e => {
+                      const id = e.target.value || null
+                      setUseSavedAddressId(id)
+                      if (id) {
+                        const sel = savedAddresses.find(a => a.id === id)
+                        if (sel) {
+                          setNombre(sel.nombre || '')
+                          setCalle(sel.calle || '')
+                          setNumero(sel.numero || '')
+                          setColonia(sel.colonia || '')
+                          setMunicipio(sel.municipio || '')
+                          setEstado(sel.estado || '')
+                          setCodigoPostal(sel.codigoPostal || '')
+                          setTelefono(sel.telefono || '')
+                        }
+                      }
+                    }} className="w-full p-2 border border-border rounded">
+                      <option value="">(Seleccionar dirección)</option>
+                      {savedAddresses.map(a => <option key={a.id} value={a.id}>{a.alias || a.nombre}</option>)}
+                    </select>
+                  </div>
+                )}
+
                 <div>
                   <label htmlFor="ship-name" className="block text-sm mb-1">Nombre del destinatario</label>
                   <input id="ship-name" value={nombre} onChange={e=>{ setNombre(e.target.value); if (errors.nombre) validateField('nombre', e.target.value) }} onBlur={e=>validateField('nombre', e.target.value)} className="p-2 border border-border rounded w-full" aria-invalid={!!errors.nombre} aria-describedby={errors.nombre ? 'ship-name-error' : undefined} />
@@ -208,6 +260,10 @@ export default function Checkout(){
               </div>
               <div className="mt-4 border-t border-border pt-3">
                 <div className="flex justify-between"><span>Total</span><strong>${total.toFixed(2)}</strong></div>
+                <div className="mt-3 flex items-center gap-2">
+                  <input id="save-address" type="checkbox" checked={saveToAccount} onChange={e=>setSaveToAccount(e.target.checked)} />
+                  <label htmlFor="save-address" className="text-sm">Guardar esta dirección en mi cuenta (cuando el backend esté disponible se persistirá en el servidor)</label>
+                </div>
                 <button disabled={submitting} onClick={handleConfirm} className="mt-4 w-full bg-primary text-white px-4 py-2 rounded">{submitting? 'Procesando...':'Confirmar pedido (simulado)'}</button>
               </div>
             </aside>
