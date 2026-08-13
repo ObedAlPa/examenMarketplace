@@ -2,6 +2,7 @@ import React from 'react'
 import Navbar from '../components/ui/Navbar'
 import ProductGrid from '../components/product/ProductGrid'
 import { getFeaturedProducts, getCategories } from '../services/mockApi'
+import { Link } from 'react-router-dom'
 
 export default function Home(){
   const products = getFeaturedProducts()
@@ -14,7 +15,7 @@ export default function Home(){
           <h2 className="text-2xl font-semibold">Categorías</h2>
           <div className="flex gap-3 mt-3">
             {categories.map(c => (
-              <button key={c} className="px-3 py-1 rounded bg-white border border-border text-muted">{c}</button>
+              <Link key={c} to={`/catalog?category=${encodeURIComponent(c)}`} className="px-3 py-1 rounded bg-white border border-border text-muted">{c}</Link>
             ))}
           </div>
         </section>
