@@ -3,6 +3,8 @@ import Navbar from '../components/ui/Navbar'
 import { useCart } from '../context/CartContext'
 import { useNavigate } from 'react-router-dom'
 import * as addressService from '../services/addressService'
+import orderService from '../services/orderService'
+import { validateCheckout, validateCheckoutField } from '../services/form'
 
 // Mock postal code lookup - in production this will call a postal code API (SEPOMEX or similar)
 const mockCpLookup = async (cp: string) => {
@@ -107,8 +109,6 @@ export default function Checkout(){
     }
 
     setSubmitting(true)
-    // create order in localStorage as mock
-    const orders = JSON.parse(localStorage.getItem('tenomerca_orders') || '[]')
     const id = 'ORD-' + Date.now()
     const order = {
       id,
@@ -130,8 +130,9 @@ export default function Checkout(){
       }
     }
 
-    orders.push(order)
-    localStorage.setItem('tenomerca_orders', JSON.stringify(orders))
+    // persist order via service (mocked). When backend exists, orderService will call the API.
+    await orderService.createOrder(order)
+
     // clear cart
     clear()
     // reload saved addresses for UI consistency

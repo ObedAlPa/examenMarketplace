@@ -1,11 +1,16 @@
 import React from 'react'
 import { useParams } from 'react-router-dom'
 import Navbar from '../components/ui/Navbar'
-import { products } from '../mocks/products'
+import productService from '../services/productService'
+import React, { useEffect, useState } from 'react'
 
 export default function ProductDetail(){
   const { id } = useParams()
-  const product = products.find(p => p.id === id)
+  const [product, setProduct] = useState<any | null>(null)
+
+  useEffect(() => {
+    productService.getProductById(id).then(setProduct)
+  }, [id])
 
   if (!product) return (
     <div className="min-h-screen">

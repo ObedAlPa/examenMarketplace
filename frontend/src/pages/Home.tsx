@@ -1,12 +1,19 @@
 import React from 'react'
 import Navbar from '../components/ui/Navbar'
 import ProductGrid from '../components/product/ProductGrid'
-import { getFeaturedProducts, getCategories } from '../services/mockApi'
+import productService from '../services/productService'
 import { Link } from 'react-router-dom'
+import React, { useEffect, useState } from 'react'
 
 export default function Home(){
-  const products = getFeaturedProducts()
-  const categories = getCategories()
+  const [products, setProducts] = useState([])
+  const [categories, setCategories] = useState<string[]>([])
+
+  useEffect(() => {
+    productService.getFeaturedProducts().then(setProducts)
+    productService.getCategories().then(setCategories)
+  }, [])
+
   return (
     <div className="min-h-screen">
       <Navbar />

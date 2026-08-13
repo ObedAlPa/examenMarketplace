@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import Navbar from '../components/ui/Navbar'
+import orderService from '../services/orderService'
 
 export default function OrderDetail(){
   const { id } = useParams()
@@ -8,9 +9,7 @@ export default function OrderDetail(){
 
   useEffect(() => {
     if (!id) return
-    const orders = JSON.parse(localStorage.getItem('tenomerca_orders') || '[]')
-    const found = orders.find((o: any) => o.id === id)
-    setOrder(found || null)
+    orderService.getOrderById(id).then(found => setOrder(found || null))
   }, [id])
 
   if (!order) {
@@ -55,9 +54,6 @@ export default function OrderDetail(){
             </div>
           </section>
 
-          <div className="mt-6">
-            <small className="text-muted">Este es el recibo mínimo requerido por el proyecto. Se mostró previamente un prompt con un resumen rápido.</small>
-          </div>
 
           <div className="mt-4">
             <Link to="/orders" className="px-4 py-2 rounded border border-border">Volver a mis pedidos</Link>

@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Navbar from '../components/ui/Navbar'
+import orderService from '../services/orderService'
 
 export default function Orders(){
   const [orders, setOrders] = useState<any[]>([])
 
   useEffect(() => {
-    const o = JSON.parse(localStorage.getItem('tenomerca_orders') || '[]')
-    setOrders(o.reverse())
+    orderService.fetchOrders().then(o => setOrders(o.reverse()))
   }, [])
 
   return (
