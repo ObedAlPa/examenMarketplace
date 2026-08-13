@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root{
+  --color-primary: #C94F3C;
+  --color-secondary: #0E9AA7;
+  --color-bg: #F7F7F8;
+  --color-surface: #FFFFFF;
+  --color-text: #222222;
+  --color-muted: #4B4B4B;
+  --color-border: #E6E6E9;
+}
+
+html, body, #root {
+  height: 100%;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: 'Poppins', Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+.btn-primary{
+  @apply bg-primary text-white px-4 py-2 rounded-lg font-semibold;
+}

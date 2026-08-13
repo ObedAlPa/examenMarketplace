@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="40" viewBox="0 0 360 60" role="img" aria-label="TenoMerca">
+  <g transform="translate(10,6)">
+    <path d="M18 0 C28 6 34 18 30 28 C26 38 14 44 6 40 C-2 36 -2 22 2 12 C6 2 12 -6 18 0 Z" fill="#C94F3C" />
+  </g>
+  <text x="80" y="36" font-family="Poppins, Inter, sans-serif" font-weight="600" font-size="28" fill="#222222">TenoMerca</text>
+</svg>
