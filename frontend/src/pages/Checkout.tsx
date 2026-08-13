@@ -113,7 +113,8 @@ export default function Checkout(){
     clear()
     setTimeout(() => {
       setSubmitting(false)
-      navigate('/orders')
+      // redirect to order detail / receipt
+      navigate(`/orders/${id}`)
     }, 800)
   }
 

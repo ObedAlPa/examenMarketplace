@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import Navbar from '../components/ui/Navbar'
 
 export default function Orders(){
@@ -19,7 +20,7 @@ export default function Orders(){
         ) : (
           <div className="mt-4 space-y-4">
             {orders.map(o => (
-              <div key={o.id} className="bg-white p-4 rounded border border-border">
+              <Link key={o.id} to={`/orders/${o.id}`} className="block bg-white p-4 rounded border border-border hover:shadow">
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="font-semibold">Pedido {o.id}</div>
@@ -34,7 +35,7 @@ export default function Orders(){
                   <div className="font-semibold">Dirección</div>
                   <div>{o.direccion.calle} {o.direccion.numero}, {o.direccion.colonia}, {o.direccion.municipio}, {o.direccion.estado}, {o.direccion.codigoPostal}</div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         )}
