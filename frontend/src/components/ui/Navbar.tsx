@@ -48,14 +48,22 @@ export default function Navbar(){
               </button>
 
               {open && (
-                <div className="absolute right-0 mt-2 w-48 bg-white border border-border rounded shadow-md z-20">
+                <div className="absolute right-0 mt-2 w-56 bg-white border border-border rounded shadow-md z-20">
                   <Link to="/account" className="block px-4 py-2 hover:bg-gray-50">Mi cuenta</Link>
                   <Link to="/orders" className="block px-4 py-2 hover:bg-gray-50">Mis pedidos</Link>
-                  {auth.user.role === 'admin' && <Link to="/admin" className="block px-4 py-2 hover:bg-gray-50">Admin</Link>}
+                  {auth.user.role === 'admin' && (
+                    <div>
+                      <div className="border-t border-border mt-1" />
+                      <div className="px-2 py-1 text-xs text-muted">Admin</div>
+                      <Link to="/admin/products" className="block px-4 py-2 hover:bg-gray-50">Productos</Link>
+                      <Link to="/admin/categories" className="block px-4 py-2 hover:bg-gray-50">Categorías</Link>
+                      <Link to="/admin/users" className="block px-4 py-2 hover:bg-gray-50">Usuarios</Link>
+                      <Link to="/admin/users-orders" className="block px-4 py-2 hover:bg-gray-50">Pedidos (admin)</Link>
+                    </div>
+                  )}
                   <button onClick={handleLogout} className="w-full text-left px-4 py-2 hover:bg-gray-50">Cerrar sesión</button>
                 </div>
-              )}
-            </div>
+              )}            </div>
           )}
 
           <Link to="/cart" className="relative bg-primary text-white px-3 py-1 rounded">Carrito
