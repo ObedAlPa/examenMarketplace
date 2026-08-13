@@ -5,6 +5,8 @@ import Catalog from './pages/Catalog'
 import ProductDetail from './pages/ProductDetail'
 import Login from './pages/auth/Login'
 import Register from './pages/auth/Register'
+import Account from './pages/Account'
+import Orders from './pages/Orders'
 import { AuthProvider } from './context/AuthContext'
 
 export default function App(){
@@ -16,6 +18,8 @@ export default function App(){
         <Route path='/product/:id' element={<ProductDetail/>} />
         <Route path='/auth/login' element={<Login/>} />
         <Route path='/auth/register' element={<Register/>} />
+        <Route path='/account' element={<Account/>} />
+        <Route path='/orders' element={<Orders/>} />
       </Routes>
     </AuthProvider>
   )
