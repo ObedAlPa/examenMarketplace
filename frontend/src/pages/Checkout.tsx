@@ -39,64 +39,19 @@ export default function Checkout(){
   const [paymentMethod, setPaymentMethod] = useState('Tarjeta simulada')
   const [submitting, setSubmitting] = useState(false)
 
+  import { validateCheckout, validateCheckoutField } from '../services/form'
+
   const validate = () => {
-    const newErrors: Record<string, string> = {}
-    if (!nombre.trim()) newErrors.nombre = 'Nombre requerido'
-    else if (nombre.trim().length < 3) newErrors.nombre = 'Nombre muy corto'
-
-    if (!telefono.trim()) newErrors.telefono = 'Teléfono requerido'
-    else {
-      const digits = telefono.replace(/\D/g, '')
-      if (!/^\d{7,10}$/.test(digits)) newErrors.telefono = 'Teléfono inválido (7-10 dígitos)'
-    }
-
-    if (!codigoPostal.trim()) newErrors.codigoPostal = 'Código postal requerido'
-    else if (!/^\d{5}$/.test(codigoPostal)) newErrors.codigoPostal = 'Código postal debe tener 5 dígitos'
-
-    if (!calle.trim()) newErrors.calle = 'Calle requerida'
-    if (!numero.trim()) newErrors.numero = 'Número requerido'
-    if (!colonia.trim()) newErrors.colonia = 'Colonia requerida'
-
+    const newErrors = validateCheckout({ nombre, telefono, codigoPostal, calle, numero, colonia })
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
 
   const validateField = (field: string, value: string) => {
+    const err = validateCheckoutField(field, value)
     const next = { ...errors }
-    switch (field) {
-      case 'nombre':
-        if (!value.trim()) next.nombre = 'Nombre requerido'
-        else if (value.trim().length < 3) next.nombre = 'Nombre muy corto'
-        else delete next.nombre
-        break
-      case 'telefono':
-        if (!value.trim()) next.telefono = 'Teléfono requerido'
-        else {
-          const digits = value.replace(/\D/g, '')
-          if (!/^\d{7,10}$/.test(digits)) next.telefono = 'Teléfono inválido (7-10 dígitos)'
-          else delete next.telefono
-        }
-        break
-      case 'codigoPostal':
-        if (!value.trim()) next.codigoPostal = 'Código postal requerido'
-        else if (!/^\d{5}$/.test(value)) next.codigoPostal = 'Código postal debe tener 5 dígitos'
-        else delete next.codigoPostal
-        break
-      case 'calle':
-        if (!value.trim()) next.calle = 'Calle requerida'
-        else delete next.calle
-        break
-      case 'numero':
-        if (!value.trim()) next.numero = 'Número requerido'
-        else delete next.numero
-        break
-      case 'colonia':
-        if (!value.trim()) next.colonia = 'Colonia requerida'
-        else delete next.colonia
-        break
-      default:
-        break
-    }
+    if (err) next[field] = err
+    else delete next[field]
     setErrors(next)
   }
 

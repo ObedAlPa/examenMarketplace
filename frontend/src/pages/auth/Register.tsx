@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-
-const isValidEmail = (e: string) => /^\S+@\S+\.\S+$/.test(e)
+import { validateRegister } from '../../services/form'
 
 export default function Register(){
   const [email, setEmail] = useState('')
@@ -13,19 +12,7 @@ export default function Register(){
   const navigate = useNavigate()
 
   const validate = () => {
-    const next: Record<string,string> = {}
-    if (!name.trim()) next.name = 'Nombre requerido'
-    else if (name.trim().length < 3) next.name = 'Nombre muy corto'
-
-    if (!email.trim()) next.email = 'Correo requerido'
-    else if (!isValidEmail(email.trim())) next.email = 'Correo inválido'
-
-    if (!password) next.password = 'Contraseña requerida'
-    else if (password.length < 8) next.password = 'La contraseña debe tener al menos 8 caracteres'
-
-    if (!confirmPassword) next.confirmPassword = 'Confirma la contraseña'
-    else if (password !== confirmPassword) next.confirmPassword = 'Las contraseñas no coinciden'
-
+    const next = validateRegister(name, email, password, confirmPassword)
     setErrors(next)
     return Object.keys(next).length === 0
   }

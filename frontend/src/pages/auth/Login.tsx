@@ -1,8 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-
-const isValidEmail = (e: string) => /^\S+@\S+\.\S+$/.test(e)
+import { validateLogin } from '../../services/form'
 
 export default function Login(){
   const [email, setEmail] = useState('')
@@ -14,11 +13,7 @@ export default function Login(){
   const navigate = useNavigate()
 
   const validate = () => {
-    const next: Record<string,string> = {}
-    if (!email.trim()) next.email = 'Correo requerido'
-    else if (!isValidEmail(email.trim())) next.email = 'Correo inválido'
-    if (!password) next.password = 'Contraseña requerida'
-    else if (password.length < 6) next.password = 'La contraseña debe tener al menos 6 caracteres'
+    const next = validateLogin(email, password)
     setErrors(next)
     return Object.keys(next).length === 0
   }
