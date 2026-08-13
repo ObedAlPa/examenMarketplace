@@ -91,3 +91,17 @@ Siguientes acciones que puedo ejecutar ahora (elige o confirmo la siguiente por 
 
 ---
 Plan creado por: Copilot CLI runtime in VS Code (asistente AI)
+
+Nota sobre el prompt de Copilot:
+
+El "Prompt para GitHub Copilot (VS Code) — Marketplace México v2" se ha versionado y colocado como archivo en el repositorio para evitar duplicados temporales y para que sea fácil de mantener y revisar.
+
+- Archivo con el prompt: [docs/copilot-prompt.md](C:/proyectos/examenMarketplace/examenMarketplace.worktrees/revision-sesion-plan-proyecto/docs/copilot-prompt.md)
+
+Dónde y cómo usarlo:
+
+- Pegar **todo** el contenido de `docs/copilot-prompt.md` directamente en el chat de GitHub Copilot dentro de VS Code cuando se inicie una sesión nueva destinada a desarrollar o continuar este proyecto.
+- Ese prompt define el rol (desarrollador full-stack senior), el stack, las reglas de diseño (design.md), y la estrategia de commits; por tanto debe ser la "fuente de verdad" para que Copilot actúe coherentemente con las decisiones del proyecto.
+- No mantener copias redundantes en la carpeta de session-state. La copia temporal que existía en session-state fue eliminada y ahora la versión controlada en `docs/copilot-prompt.md` es la referencia oficial.
+
+Si necesita que el prompt se incluya en otro lugar (por ejemplo README o design.md) indique dónde y lo hago.
