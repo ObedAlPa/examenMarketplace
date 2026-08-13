@@ -1,0 +1,72 @@
+# Node modules
+node_modules/
+
+# Environment files
+.env
+.env.*.local
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Google credentials and tokens
+*.json
+credentials.json
+service-account-*.json
+token.json
+client_secret_*.json
+
+# Build outputs
+dist/
+build/
+.vite/
+.cache/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE/editor directories
+.vscode/
+.idea/
+
+# Coverage and temp
+coverage/
+*.tmp
+*.bak
+*.dump
+*.sql.gz
+
+# Frontend specific
+/*.local
+/public/build/
+
+# Misc
+*.keystore
+
+# Ignore database credentials backups
+*.dump
+*.sql.dump
+
+# Ignore compiled node binaries
+node_modules/
+
+# Ignore lockfiles if you prefer (optional)
+# package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Ignore secrets placed in project root
+secrets/
+
+# Keep the README and design.md tracked
+!README.md
+!design.md
