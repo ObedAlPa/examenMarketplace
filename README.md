@@ -50,20 +50,71 @@ https://drive.google.com/uc?export=view&id=<FILE_ID>
 
 El sistema normaliza esas referencias para mostrarlas en el frontend sin guardar archivos dentro de PostgreSQL.
 
-## Configuración de Google Drive
+## Configuración de Google Drive (opcional — cada usuario su propia cuenta)
 
-Las imágenes de productos se suben a la cuenta institucional `al05-050-0322@utdelacosta.edu.mx` mediante OAuth2 con refresh token. Pasos resumidos:
+> **IMPORTANTE:** Este proyecto NO incluye credenciales de Google Drive en el repositorio por seguridad. **Cada persona que clone el proyecto debe configurar SU PROPIA cuenta de Google Drive** (personal o institucional) siguiendo los pasos de abajo. No uses las credenciales de otra persona.
 
-1. Entra a Google Cloud Console y crea un proyecto.
-2. Habilita la API de Google Drive.
-3. Crea un OAuth Client ID de tipo "Desktop app" y anota el Client ID y el Client Secret.
-4. Autoriza una vez con la cuenta institucional para obtener el refresh token (flujo OAuth2).
-5. Define las 4 variables de Drive en `backend/.env`.
-6. En Drive, crea la estructura de carpetas `Marketplace-Mexico/{electronica, hogar, ropa}`.
-7. `GOOGLE_DRIVE_FOLDER_ID` es el ID de la carpeta `Marketplace-Mexico`.
-8. Las imágenes se suben con permiso "cualquier persona con el enlace".
+Las imágenes de productos se suben a Google Drive mediante OAuth2 con refresh token. El backend expone `POST /api/upload` (solo admin) que devuelve una referencia `drive://<fileId>`, y el frontend la convierte en URL pública visible sin login.
 
-Nota: si Drive no está configurado, el sistema sigue funcionando. La subida responde 503 con un mensaje claro y los productos usan una imagen placeholder.
+### Pasos para configurar TU Google Drive (5-10 min)
+
+1. **Google Cloud Console** → [console.cloud.google.com](https://console.cloud.google.com)
+   - Crea un proyecto nuevo (o usa uno existente)
+   - Nombre sugerido: `TenoMerca-Drive-Upload`
+
+2. **Habilita la API de Google Drive**
+   - APIs y servicios → Biblioteca → Busca "Google Drive API" → Habilitar
+
+3. **Crea credenciales OAuth 2.0**
+   - APIs y servicios → Credenciales → Crear credenciales → ID de cliente OAuth
+   - Tipo de aplicación: **Aplicación de escritorio** (Desktop app)
+   - Nombre: `TenoMerca Local Dev`
+   - Copia el **Client ID** y **Client Secret**
+
+4. **Obtén el Refresh Token (una sola vez)**
+   - Opción A (rápida): Usa [OAuth 2.0 Playground](https://developers.google.com/oauthplayground)
+     - Gear (⚙️) → Marca "Use your own OAuth credentials" → Pega tu Client ID y Client Secret
+     - Paso 1: Selecciona `https://www.googleapis.com/auth/drive.file` → Authorize APIs
+     - Inicia sesión con **TU cuenta de Google** (la que quieras usar para subir imágenes)
+     - Paso 2: Exchange authorization code for tokens → Copia el **Refresh token**
+   - Opción B (script local): Ejecuta `node scripts/get-refresh-token.js` (ver abajo)
+
+5. **Crea la carpeta raíz en TU Drive**
+   - Entra a [drive.google.com](https://drive.google.com) con TU cuenta
+   - Crea una carpeta llamada `Marketplace-Mexico`
+   - Dentro crea subcarpetas: `electronica`, `hogar`, `ropa`, `deportes`, `libros`, `general` (el backend las crea automáticamente si no existen, pero la raíz sí debe existir)
+   - Copia el **ID de la carpeta `Marketplace-Mexico`** (es lo que hay en la URL: `https://drive.google.com/drive/folders/<ESTE_ES_EL_ID>`)
+
+6. **Configura `backend/.env` con TUS valores**
+   ```env
+   GOOGLE_CLIENT_ID=tu-client-id-aquí
+   GOOGLE_CLIENT_SECRET=tu-client-secret-aquí
+   GOOGLE_REFRESH_TOKEN=tu-refresh-token-aquí
+   GOOGLE_DRIVE_FOLDER_ID=id-de-tu-carpeta-marketplace-mexico
+   ```
+
+### Script auxiliar para obtener el refresh token (opcional)
+
+```bash
+# En backend/
+node scripts/get-refresh-token.js
+# Te pedirá Client ID y Client Secret, abre el navegador, autorizas, y te imprime el refresh token
+```
+
+> Si no tienes `scripts/get-refresh-token.js`, usa el OAuth Playground (opción A arriba).
+
+### Qué pasa si NO configuras Drive
+
+- El proyecto **funciona completo** sin Drive
+- Al intentar subir imagen (admin) → respuesta `503` con mensaje claro
+- Los productos del seed usan placeholders (`/placeholder-product.jpg`)
+- No hay errores ni crashes, solo feature degradada elegantemente
+
+### Seguridad: por qué NO hay credenciales en el repo
+
+- Un **refresh token no expira** y da acceso completo al Drive de esa cuenta
+- Subirlo a Git público = cualquiera podría borrar/subir/leer archivos de ese Drive
+- Cada desarrollador/usuario usa SU cuenta → aislamiento total, sin riesgos
 
 ## Búsqueda de código postal
 
