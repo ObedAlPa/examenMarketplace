@@ -37,6 +37,9 @@ const ensureEnvFiles = () => {
   const frontendEnv = path.join(frontendDir, '.env.local')
 
   const backendValues = readEnvFile(backendEnv)
+  if (!backendValues.PORT) {
+    fs.appendFileSync(backendEnv, '\nPORT=4000\n')
+  }
   if (!backendValues.DATABASE_URL) {
     fs.appendFileSync(backendEnv, '\n# Leave DATABASE_URL blank if you want the app to run in memory mode without PostgreSQL\n')
   }
