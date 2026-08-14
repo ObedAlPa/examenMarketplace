@@ -2,7 +2,16 @@ const express = require('express')
 const cors = require('cors')
 const jwt = require('jsonwebtoken')
 const crypto = require('crypto')
+const bcrypt = require('bcrypt')
 const { categories, products, users, orders, addresses } = require('./data')
+// Ensure in-memory seed users have hashed passwords for local dev/tests
+for (let u of users) {
+  if (u && u.password && !String(u.password).startsWith('$2')) {
+    // hash synchronously at startup for simplicity
+    u.password = bcrypt.hashSync(String(u.password), 10)
+  }
+}
+
 // Optional Postgres-backed store (used when DATABASE_URL is configured)
 let store = null
 try {
@@ -101,9 +110,10 @@ app.post('/api/auth/login', async (req, res) => {
   const { email, password } = req.body || {}
   const user = await findUserByEmail(email)
 
-  if (!user || user.password !== String(password || '')) {
-    return res.status(401).json({ message: 'Credenciales inválidas' })
-  }
+  if (!user) return res.status(401).json({ message: 'Credenciales inválidas' })
+
+  const match = await bcrypt.compare(String(password || ''), String(user.password || ''))
+  if (!match) return res.status(401).json({ message: 'Credenciales inválidas' })
 
   return res.json({
     token: buildToken(user),
@@ -124,11 +134,13 @@ app.post('/api/auth/register', async (req, res) => {
 
   const resolvedRole = role === 'admin' || role === 'comprador' || role === 'buyer' ? (role === 'admin' ? 'admin' : 'comprador') : 'comprador'
 
+  const hashed = await bcrypt.hash(String(password), 10)
+
   const user = {
     id: withId('USR'),
     nombre: String(nombre),
     email: String(email).toLowerCase(),
-    password: String(password),
+    password: hashed,
     role: resolvedRole,
     created_at: new Date().toISOString()
   }
@@ -327,11 +339,13 @@ app.post('/api/users', requireAuth, requireRole('admin'), async (req, res) => {
 
   const resolvedRole = role === 'admin' || role === 'comprador' || role === 'buyer' ? (role === 'admin' ? 'admin' : 'comprador') : 'comprador'
 
+  const hashed = await bcrypt.hash(String(password), 10)
+
   const newUser = {
     id: withId('USR'),
     nombre: String(nombre),
     email: String(email).toLowerCase(),
-    password: String(password),
+    password: hashed,
     role: resolvedRole,
     created_at: new Date().toISOString()
   }
