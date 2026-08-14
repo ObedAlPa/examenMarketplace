@@ -13,7 +13,7 @@ test('GET /api/health returns ok', async () => {
 test('POST /api/auth/login returns JWT and user for admin account', async () => {
   const response = await request(app)
     .post('/api/auth/login')
-    .send({ email: 'admin@tenomerca.test', password: 'AdminPass123!' })
+    .send({ email: 'admin@auto.partes.test', password: 'AdminPass123!' })
 
   assert.equal(response.status, 200)
   assert.equal(response.body.user.role, 'admin')

@@ -1,4 +1,4 @@
-﻿# TenoMerca
+﻿# AutoPartes
 
 ## Ficha académica
 
@@ -7,7 +7,7 @@
 - Materia: Desarrollo web integral
 - Unidad temática: Unidad 3 — Integración de componentes de software para aplicaciones Web
 
-Marketplace académico con frontend React + Vite, backend Express y persistencia PostgreSQL preparada.
+Tienda en línea de venta de partes y accesorios para automóviles. Aplicación full-stack con API REST, autenticación JWT, carrito con checkout, búsqueda de código postal y subida de imágenes a Google Drive.
 
 ## Instalación rápida
 
@@ -30,10 +30,10 @@ Al iniciar el sistema, la primera pantalla es el login (ver sección de credenci
 ## Credenciales de prueba
 
 - Admin:
-  - email: `admin@tenomerca.test`
+  - email: `admin@auto.partes.test`
   - password: `AdminPass123!`
 - Comprador:
-  - email: `buyer@tenomerca.test`
+  - email: `buyer@auto.partes.test`
   - password: `BuyerPass123!`
 
 La primera vista del sistema es el login. Si aún no tienes cuenta, usa la opción de registro desde la pantalla de acceso.
@@ -60,7 +60,7 @@ Las imágenes de productos se suben a Google Drive mediante OAuth2 con refresh t
 
 1. **Google Cloud Console** → [console.cloud.google.com](https://console.cloud.google.com)
    - Crea un proyecto nuevo (o usa uno existente)
-   - Nombre sugerido: `TenoMerca-Drive-Upload`
+   - Nombre sugerido: `AutoPartes-Drive-Upload`
 
 2. **Habilita la API de Google Drive**
    - APIs y servicios → Biblioteca → Busca "Google Drive API" → Habilitar
@@ -68,7 +68,7 @@ Las imágenes de productos se suben a Google Drive mediante OAuth2 con refresh t
 3. **Crea credenciales OAuth 2.0**
    - APIs y servicios → Credenciales → Crear credenciales → ID de cliente OAuth
    - Tipo de aplicación: **Aplicación de escritorio** (Desktop app)
-   - Nombre: `TenoMerca Local Dev`
+   - Nombre: `AutoPartes Local Dev`
    - Copia el **Client ID** y **Client Secret**
 
 4. **Obtén el Refresh Token (una sola vez)**
@@ -81,16 +81,16 @@ Las imágenes de productos se suben a Google Drive mediante OAuth2 con refresh t
 
 5. **Crea la carpeta raíz en TU Drive**
    - Entra a [drive.google.com](https://drive.google.com) con TU cuenta
-   - Crea una carpeta llamada `Marketplace-Mexico`
-   - Dentro crea subcarpetas: `electronica`, `hogar`, `ropa`, `deportes`, `libros`, `general` (el backend las crea automáticamente si no existen, pero la raíz sí debe existir)
-   - Copia el **ID de la carpeta `Marketplace-Mexico`** (es lo que hay en la URL: `https://drive.google.com/drive/folders/<ESTE_ES_EL_ID>`)
+   - Crea una carpeta llamada `AutoPartes`
+   - Dentro crea subcarpetas: `llantas`, `frenos`, `motor`, `electrónica`, `suspensión`, `accesorios` (el backend las crea automáticamente si no existen, pero la raíz sí debe existir)
+   - Copia el **ID de la carpeta `AutoPartes`** (es lo que hay en la URL: `https://drive.google.com/drive/folders/<ESTE_ES_EL_ID>`)
 
 6. **Configura `backend/.env` con TUS valores**
    ```env
    GOOGLE_CLIENT_ID=tu-client-id-aquí
    GOOGLE_CLIENT_SECRET=tu-client-secret-aquí
    GOOGLE_REFRESH_TOKEN=tu-refresh-token-aquí
-   GOOGLE_DRIVE_FOLDER_ID=id-de-tu-carpeta-marketplace-mexico
+   GOOGLE_DRIVE_FOLDER_ID=id-de-tu-carpeta-auto-partes
    ```
 
 ### Script auxiliar para obtener el refresh token (opcional)
@@ -160,7 +160,7 @@ CP_API_URL=https://postali.app/api/v1/mx/cp/
 GOOGLE_CLIENT_ID=tu-client-id
 GOOGLE_CLIENT_SECRET=tu-client-secret
 GOOGLE_REFRESH_TOKEN=tu-refresh-token
-GOOGLE_DRIVE_FOLDER_ID=id-de-la-carpeta-marketplace-mexico
+GOOGLE_DRIVE_FOLDER_ID=id-de-la-carpeta-auto-partes
 ```
 
 Frontend:
@@ -179,18 +179,9 @@ npm run seed
 npm start
 ```
 
-## Credenciales de prueba
-
-- Admin:
-  - email: `admin@tenomerca.test`
-  - password: `AdminPass123!`
-- Comprador:
-  - email: `buyer@tenomerca.test`
-  - password: `BuyerPass123!`
-
 ## Funcionalidades principales
 
-- catálogo de productos
+- catálogo de partes para automóvil
 - carrito con backend y checkout
 - pedidos con número de pedido y pago simulado (método y estado)
 - búsqueda de código postal real (Postali/SEPOMEX)
