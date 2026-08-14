@@ -15,7 +15,7 @@ const products = [
     stock: 25,
     categoria_id: 'cat-1',
     featured: true,
-    archivo_url: '/placeholder-audio.jpg',
+    archivo_url: 'drive://1m6rI4d2d1QfQz5mhI5jCJjW2d7S9gKXq',
     created_at: new Date().toISOString()
   },
   {
@@ -26,7 +26,7 @@ const products = [
     stock: 40,
     categoria_id: 'cat-1',
     featured: true,
-    archivo_url: '/placeholder-teclado.jpg',
+    archivo_url: 'drive://1M3QqvT8SHhXl5b1Z0gF4mN4x6dU2dR4Y',
     created_at: new Date().toISOString()
   },
   {
@@ -37,7 +37,7 @@ const products = [
     stock: 60,
     categoria_id: 'cat-2',
     featured: false,
-    archivo_url: '/placeholder-sarten.jpg',
+    archivo_url: 'drive://1Yl4nGQxEMWI3fEW1nD9X9PKx9ZV9Y2kF',
     created_at: new Date().toISOString()
   },
   {
@@ -48,7 +48,7 @@ const products = [
     stock: 120,
     categoria_id: 'cat-3',
     featured: false,
-    archivo_url: '/placeholder-playera.jpg',
+    archivo_url: 'drive://1v9zNfQnI4Qz3J8C5s0cK7yM7Vv0xP3nW',
     created_at: new Date().toISOString()
   },
   {
@@ -59,7 +59,7 @@ const products = [
     stock: 30,
     categoria_id: 'cat-4',
     featured: true,
-    archivo_url: '/placeholder-balon.jpg',
+    archivo_url: 'drive://1WbH9a0qG2x0L4w8SE1QjF4wQ1nP7Xc9k',
     created_at: new Date().toISOString()
   },
   {
@@ -70,7 +70,7 @@ const products = [
     stock: 80,
     categoria_id: 'cat-5',
     featured: false,
-    archivo_url: '/placeholder-libro.jpg',
+    archivo_url: 'drive://1lD0uG1sJ8X2mQ4rC6vY0wK2hP7wV9nT1',
     created_at: new Date().toISOString()
   }
 ]

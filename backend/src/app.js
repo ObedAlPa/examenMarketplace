@@ -3,6 +3,7 @@ const cors = require('cors')
 const jwt = require('jsonwebtoken')
 const crypto = require('crypto')
 const bcrypt = require('bcrypt')
+const { normalizeDriveImageUrl } = require('./imageUrl')
 const { categories, products, users, orders, addresses } = require('./data')
 // Ensure in-memory seed users have hashed passwords for local dev/tests
 for (let u of users) {
@@ -61,6 +62,11 @@ const sanitizeUser = (user) => {
   if (!user) return null
   const { password, ...safeUser } = user
   return safeUser
+}
+
+const normalizeProduct = (product) => {
+  if (!product) return null
+  return { ...product, archivo_url: normalizeDriveImageUrl(product.archivo_url) }
 }
 
 const buildToken = (user) => jwt.sign({ sub: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '8h' })
@@ -185,7 +191,7 @@ app.get('/api/products', async (req, res) => {
   const { featured, q } = req.query
 
   if (store) {
-    let list = await store.getProducts()
+    let list = (await store.getProducts()).map(normalizeProduct)
     if (featured === 'true') list = list.filter(p => p.featured)
     if (q) {
       const query = String(q).toLowerCase()
@@ -194,7 +200,7 @@ app.get('/api/products', async (req, res) => {
     return res.json(list)
   }
 
-  let list = [...products]
+  let list = [...products].map(normalizeProduct)
   if (featured === 'true') list = list.filter((product) => product.featured)
   if (q) {
     const query = String(q).toLowerCase()
@@ -207,21 +213,21 @@ app.get('/api/products/search', async (req, res) => {
   const query = String(req.query.q || '').trim().toLowerCase()
   if (!query) return res.json([])
   if (store) {
-    const all = await store.getProducts()
+    const all = (await store.getProducts()).map(normalizeProduct)
     const filtered = all.filter((product) => String(product.titulo || '').toLowerCase().includes(query) || String(product.descripcion || '').toLowerCase().includes(query))
     return res.json(filtered)
   }
-  const filtered = products.filter((product) => product.titulo.toLowerCase().includes(query) || (product.descripcion || '').toLowerCase().includes(query))
+  const filtered = products.map(normalizeProduct).filter((product) => product.titulo.toLowerCase().includes(query) || (product.descripcion || '').toLowerCase().includes(query))
   return res.json(filtered)
 })
 
 app.get('/api/products/:id', async (req, res) => {
   if (store) {
-    const product = await store.getProductById(req.params.id)
+    const product = normalizeProduct(await store.getProductById(req.params.id))
     if (!product) return sendNotFound(res, 'Producto')
     return res.json(product)
   }
-  const product = products.find((item) => item.id === req.params.id)
+  const product = normalizeProduct(products.find((item) => item.id === req.params.id))
   if (!product) return sendNotFound(res, 'Producto')
   return res.json(product)
 })

@@ -38,7 +38,7 @@ async function run() {
       `INSERT INTO products (id,titulo,descripcion,precio,stock,categoria_id,featured,archivo_url,created_at)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,now())
        ON CONFLICT (id) DO NOTHING`,
-      ['PRD-1', 'Producto Demo', 'Descripción de ejemplo', 199.9, 10, 'CAT-1', true, '/placeholder-product.jpg']
+      ['PRD-1', 'Producto Demo', 'Descripción de ejemplo', 199.9, 10, 'CAT-1', true, 'drive://1m6rI4d2d1QfQz5mhI5jCJjW2d7S9gKXq']
     )
 
     await client.query(
