@@ -1,4 +1,5 @@
 import * as mockApi from './mockApi'
+import apiClient from './apiClient'
 
 const API_BASE = import.meta.env.VITE_API_URL || ''
 const STORAGE_KEY = 'tenomerca_categories'
@@ -26,9 +27,7 @@ const writeAll = (list: any[]) => {
 
 export const fetchCategories = async () => {
   if (API_BASE) {
-    const res = await fetch(`${API_BASE}/api/categories`)
-    if (!res.ok) throw new Error('Failed to fetch categories')
-    return res.json()
+    return apiClient.apiFetch('/api/categories')
   }
   await new Promise(res => setTimeout(res, 60))
   return readAll()
@@ -36,9 +35,7 @@ export const fetchCategories = async () => {
 
 export const createCategory = async (cat: any) => {
   if (API_BASE) {
-    const res = await fetch(`${API_BASE}/api/categories`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cat) })
-    if (!res.ok) throw new Error('Failed to create category')
-    return res.json()
+    return apiClient.apiFetch('/api/categories', { method: 'POST', body: JSON.stringify(cat) })
   }
   await new Promise(res => setTimeout(res, 60))
   const list = readAll()
@@ -49,9 +46,12 @@ export const createCategory = async (cat: any) => {
 
 export const updateCategory = async (id: string, patch: any) => {
   if (API_BASE) {
-    const res = await fetch(`${API_BASE}/api/categories/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patch) })
-    if (!res.ok) return null
-    return res.json()
+    try {
+      return await apiClient.apiFetch(`/api/categories/${id}`, { method: 'PUT', body: JSON.stringify(patch) })
+    } catch (e: any) {
+      if (e && e.status === 404) return null
+      throw e
+    }
   }
   await new Promise(res => setTimeout(res, 60))
   const list = readAll()
@@ -64,8 +64,7 @@ export const updateCategory = async (id: string, patch: any) => {
 
 export const deleteCategory = async (id: string) => {
   if (API_BASE) {
-    const res = await fetch(`${API_BASE}/api/categories/${id}`, { method: 'DELETE' })
-    if (!res.ok) throw new Error('Failed to delete category')
+    await apiClient.apiFetch(`/api/categories/${id}`, { method: 'DELETE' })
     return true
   }
   await new Promise(res => setTimeout(res, 60))

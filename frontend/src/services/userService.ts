@@ -1,5 +1,7 @@
 // userService: local mock for users (localStorage-backed). When VITE_API_URL is set, calls the API.
 
+import apiClient from './apiClient'
+
 const API_BASE = import.meta.env.VITE_API_URL || ''
 const STORAGE_KEY = 'tenomerca_users'
 
@@ -24,9 +26,7 @@ const writeAll = (list: any[]) => {
 
 export const fetchUsers = async () => {
   if (API_BASE) {
-    const res = await fetch(`${API_BASE}/api/users`)
-    if (!res.ok) throw new Error('Failed to fetch users')
-    return res.json()
+    return apiClient.apiFetch('/api/users')
   }
   await new Promise(res => setTimeout(res, 60))
   return readAll()
@@ -34,9 +34,12 @@ export const fetchUsers = async () => {
 
 export const getUserById = async (id: string) => {
   if (API_BASE) {
-    const res = await fetch(`${API_BASE}/api/users/${id}`)
-    if (!res.ok) return null
-    return res.json()
+    try {
+      return await apiClient.apiFetch(`/api/users/${id}`)
+    } catch (e: any) {
+      if (e && e.status === 404) return null
+      throw e
+    }
   }
   await new Promise(res => setTimeout(res, 60))
   return readAll().find(u => u.id === id) || null
@@ -44,9 +47,7 @@ export const getUserById = async (id: string) => {
 
 export const createUser = async (user: any) => {
   if (API_BASE) {
-    const res = await fetch(`${API_BASE}/api/users`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(user) })
-    if (!res.ok) throw new Error('Failed to create user')
-    return res.json()
+    return apiClient.apiFetch('/api/users', { method: 'POST', body: JSON.stringify(user) })
   }
   await new Promise(res => setTimeout(res, 80))
   const list = readAll()
@@ -57,9 +58,12 @@ export const createUser = async (user: any) => {
 
 export const updateUser = async (id: string, patch: any) => {
   if (API_BASE) {
-    const res = await fetch(`${API_BASE}/api/users/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patch) })
-    if (!res.ok) return null
-    return res.json()
+    try {
+      return await apiClient.apiFetch(`/api/users/${id}`, { method: 'PUT', body: JSON.stringify(patch) })
+    } catch (e: any) {
+      if (e && e.status === 404) return null
+      throw e
+    }
   }
   await new Promise(res => setTimeout(res, 80))
   const list = readAll()
@@ -72,8 +76,7 @@ export const updateUser = async (id: string, patch: any) => {
 
 export const deleteUser = async (id: string) => {
   if (API_BASE) {
-    const res = await fetch(`${API_BASE}/api/users/${id}`, { method: 'DELETE' })
-    if (!res.ok) throw new Error('Failed to delete user')
+    await apiClient.apiFetch(`/api/users/${id}`, { method: 'DELETE' })
     return true
   }
   await new Promise(res => setTimeout(res, 80))

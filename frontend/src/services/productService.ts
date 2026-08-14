@@ -1,5 +1,6 @@
 import * as mockApi from './mockApi'
 import { products as defaultProducts } from '../mocks/products'
+import apiClient from './apiClient'
 
 // Product service abstraction. When VITE_API_URL is set, methods will call the backend API
 const API_BASE = import.meta.env.VITE_API_URL || ''
@@ -25,9 +26,7 @@ const writeAll = (list: any[]) => {
 
 export const fetchAllProducts = async () => {
   if (API_BASE) {
-    const res = await fetch(`${API_BASE}/api/products`)
-    if (!res.ok) throw new Error('Failed to fetch products from API')
-    return res.json()
+    return apiClient.apiFetch('/api/products')
   }
 
   await new Promise(res => setTimeout(res, 80))
@@ -36,9 +35,7 @@ export const fetchAllProducts = async () => {
 
 export const getFeaturedProducts = async () => {
   if (API_BASE) {
-    const res = await fetch(`${API_BASE}/api/products?featured=true`)
-    if (!res.ok) throw new Error('Failed to fetch featured products')
-    return res.json()
+    return apiClient.apiFetch('/api/products?featured=true')
   }
 
   await new Promise(res => setTimeout(res, 80))
@@ -47,9 +44,7 @@ export const getFeaturedProducts = async () => {
 
 export const getCategories = async () => {
   if (API_BASE) {
-    const res = await fetch(`${API_BASE}/api/categories`)
-    if (!res.ok) throw new Error('Failed to fetch categories')
-    return res.json()
+    return apiClient.apiFetch('/api/categories')
   }
 
   await new Promise(res => setTimeout(res, 40))
@@ -58,9 +53,12 @@ export const getCategories = async () => {
 
 export const getProductById = async (id: string | undefined) => {
   if (API_BASE) {
-    const res = await fetch(`${API_BASE}/api/products/${id}`)
-    if (!res.ok) return null
-    return res.json()
+    try {
+      return await apiClient.apiFetch(`/api/products/${id}`)
+    } catch (e: any) {
+      if (e && e.status === 404) return null
+      throw e
+    }
   }
 
   await new Promise(res => setTimeout(res, 80))
@@ -69,9 +67,7 @@ export const getProductById = async (id: string | undefined) => {
 
 export const searchProducts = async (query: string) => {
   if (API_BASE) {
-    const res = await fetch(`${API_BASE}/api/products/search?q=` + encodeURIComponent(query))
-    if (!res.ok) throw new Error('Search failed')
-    return res.json()
+    return apiClient.apiFetch(`/api/products/search?q=${encodeURIComponent(query)}`)
   }
 
   await new Promise(res => setTimeout(res, 120))
@@ -81,9 +77,7 @@ export const searchProducts = async (query: string) => {
 
 export const createProduct = async (product: any) => {
   if (API_BASE) {
-    const res = await fetch(`${API_BASE}/api/products`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(product) })
-    if (!res.ok) throw new Error('Failed to create product')
-    return res.json()
+    return apiClient.apiFetch('/api/products', { method: 'POST', body: JSON.stringify(product) })
   }
 
   await new Promise(res => setTimeout(res, 80))
@@ -95,9 +89,12 @@ export const createProduct = async (product: any) => {
 
 export const updateProduct = async (id: string, patch: any) => {
   if (API_BASE) {
-    const res = await fetch(`${API_BASE}/api/products/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patch) })
-    if (!res.ok) return null
-    return res.json()
+    try {
+      return await apiClient.apiFetch(`/api/products/${id}`, { method: 'PUT', body: JSON.stringify(patch) })
+    } catch (e: any) {
+      if (e && e.status === 404) return null
+      throw e
+    }
   }
 
   await new Promise(res => setTimeout(res, 80))
@@ -111,8 +108,7 @@ export const updateProduct = async (id: string, patch: any) => {
 
 export const deleteProduct = async (id: string) => {
   if (API_BASE) {
-    const res = await fetch(`${API_BASE}/api/products/${id}`, { method: 'DELETE' })
-    if (!res.ok) throw new Error('Failed to delete product')
+    await apiClient.apiFetch(`/api/products/${id}`, { method: 'DELETE' })
     return true
   }
 

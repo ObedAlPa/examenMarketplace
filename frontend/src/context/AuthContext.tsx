@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
+import apiClient from '../services/apiClient'
 
 type User = { email: string; nombre?: string; role?: string }
 
@@ -29,7 +30,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     else localStorage.removeItem('tenomerca_user')
   }, [user])
 
+  // If a token exists and no user is set, try to fetch current user from API
+  useEffect(() => {
+    const API_BASE = import.meta.env.VITE_API_URL || ''
+    const token = (() => { try { return localStorage.getItem('tenomerca_token') } catch { return null } })()
+    if (!user && token && API_BASE) {
+      apiClient.apiFetch('/api/auth/me')
+        .then((payload: any) => {
+          if (payload && payload.user) setUser(payload.user)
+        })
+        .catch(() => {
+          try { localStorage.removeItem('tenomerca_token') } catch {}
+        })
+    }
+  }, [user])
+
   const login = async (email: string, password: string) => {
+    const API_BASE = import.meta.env.VITE_API_URL || ''
+
+    if (API_BASE) {
+      try {
+        const resp: any = await apiClient.apiFetch('/api/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) })
+        if (resp && resp.token) {
+          try { localStorage.setItem('tenomerca_token', resp.token) } catch {}
+        }
+        if (resp && resp.user) setUser(resp.user)
+        return { ok: true }
+      } catch (e: any) {
+        return { ok: false, message: e && e.message ? e.message : 'Error de autenticación' }
+      }
+    }
+
     // Mock authentication using seeded test accounts from README
     // Admin: admin@tenomerca.test / AdminPass123!
     // Buyer: buyer@tenomerca.test / BuyerPass123!
@@ -46,7 +77,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return { ok: false, message: 'Credenciales inválidas (modo mock). Usa los usuarios de prueba en README.' }
   }
 
-  const logout = () => setUser(null)
+  const logout = () => {
+    try { localStorage.removeItem('tenomerca_token') } catch {}
+    setUser(null)
+  }
 
   return <AuthContext.Provider value={{ user, login, logout }}>{children}</AuthContext.Provider>
 }

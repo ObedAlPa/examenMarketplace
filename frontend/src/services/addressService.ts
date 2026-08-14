@@ -3,6 +3,7 @@
 // the service will call the backend API endpoints under /api/addresses.
 
 import { v4 as uuidv4 } from 'uuid'
+import apiClient from './apiClient'
 
 const API_BASE = import.meta.env.VITE_API_URL || ''
 const STORAGE_KEY = 'tenomerca_addresses'
@@ -38,9 +39,7 @@ const writeAll = (list: Address[]) => {
 
 export const fetchAddresses = async (): Promise<Address[]> => {
   if (API_BASE) {
-    const res = await fetch(`${API_BASE}/api/addresses`)
-    if (!res.ok) throw new Error('Failed to fetch addresses')
-    return res.json()
+    return apiClient.apiFetch('/api/addresses')
   }
   // Placeholder: simulate async API call
   await new Promise(res => setTimeout(res, 100))
@@ -49,9 +48,7 @@ export const fetchAddresses = async (): Promise<Address[]> => {
 
 export const createAddress = async (data: Omit<Address, 'id'>): Promise<Address> => {
   if (API_BASE) {
-    const res = await fetch(`${API_BASE}/api/addresses`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
-    if (!res.ok) throw new Error('Failed to create address')
-    return res.json()
+    return apiClient.apiFetch('/api/addresses', { method: 'POST', body: JSON.stringify(data) })
   }
   await new Promise(res => setTimeout(res, 100))
   const list = readAll()
@@ -63,9 +60,12 @@ export const createAddress = async (data: Omit<Address, 'id'>): Promise<Address>
 
 export const updateAddress = async (id: string, data: Partial<Address>): Promise<Address | null> => {
   if (API_BASE) {
-    const res = await fetch(`${API_BASE}/api/addresses/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
-    if (!res.ok) return null
-    return res.json()
+    try {
+      return await apiClient.apiFetch(`/api/addresses/${id}`, { method: 'PUT', body: JSON.stringify(data) })
+    } catch (e: any) {
+      if (e && e.status === 404) return null
+      throw e
+    }
   }
   await new Promise(res => setTimeout(res, 100))
   const list = readAll()
@@ -78,8 +78,7 @@ export const updateAddress = async (id: string, data: Partial<Address>): Promise
 
 export const deleteAddress = async (id: string): Promise<boolean> => {
   if (API_BASE) {
-    const res = await fetch(`${API_BASE}/api/addresses/${id}`, { method: 'DELETE' })
-    if (!res.ok) throw new Error('Failed to delete address')
+    await apiClient.apiFetch(`/api/addresses/${id}`, { method: 'DELETE' })
     return true
   }
   await new Promise(res => setTimeout(res, 100))

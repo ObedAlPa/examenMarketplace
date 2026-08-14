@@ -1,5 +1,7 @@
 // orderService: abstraction for orders. Uses localStorage as mock persistence now (falls back to API when VITE_API_URL is set).
 
+import apiClient from './apiClient'
+
 const API_BASE = import.meta.env.VITE_API_URL || ''
 const STORAGE_KEY = 'tenomerca_orders'
 
@@ -21,9 +23,7 @@ const writeAll = (list: Order[]) => {
 
 export const fetchOrders = async () => {
   if (API_BASE) {
-    const res = await fetch(`${API_BASE}/api/orders`)
-    if (!res.ok) throw new Error('Failed to fetch orders')
-    return res.json()
+    return apiClient.apiFetch('/api/orders')
   }
 
   await new Promise(res => setTimeout(res, 80))
@@ -32,9 +32,12 @@ export const fetchOrders = async () => {
 
 export const getOrderById = async (id: string) => {
   if (API_BASE) {
-    const res = await fetch(`${API_BASE}/api/orders/${id}`)
-    if (!res.ok) return null
-    return res.json()
+    try {
+      return await apiClient.apiFetch(`/api/orders/${id}`)
+    } catch (e: any) {
+      if (e && e.status === 404) return null
+      throw e
+    }
   }
 
   await new Promise(res => setTimeout(res, 80))
@@ -44,9 +47,7 @@ export const getOrderById = async (id: string) => {
 
 export const createOrder = async (order: Order) => {
   if (API_BASE) {
-    const res = await fetch(`${API_BASE}/api/orders`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(order) })
-    if (!res.ok) throw new Error('Failed to create order')
-    return res.json()
+    return apiClient.apiFetch('/api/orders', { method: 'POST', body: JSON.stringify(order) })
   }
 
   await new Promise(res => setTimeout(res, 80))
@@ -58,9 +59,12 @@ export const createOrder = async (order: Order) => {
 
 export const updateOrder = async (id: string, patch: any) => {
   if (API_BASE) {
-    const res = await fetch(`${API_BASE}/api/orders/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patch) })
-    if (!res.ok) return null
-    return res.json()
+    try {
+      return await apiClient.apiFetch(`/api/orders/${id}`, { method: 'PUT', body: JSON.stringify(patch) })
+    } catch (e: any) {
+      if (e && e.status === 404) return null
+      throw e
+    }
   }
 
   await new Promise(res => setTimeout(res, 80))
@@ -74,8 +78,7 @@ export const updateOrder = async (id: string, patch: any) => {
 
 export const deleteOrder = async (id: string) => {
   if (API_BASE) {
-    const res = await fetch(`${API_BASE}/api/orders/${id}`, { method: 'DELETE' })
-    if (!res.ok) throw new Error('Failed to delete order')
+    await apiClient.apiFetch(`/api/orders/${id}`, { method: 'DELETE' })
     return true
   }
 
