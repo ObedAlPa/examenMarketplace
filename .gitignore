@@ -49,6 +49,7 @@ Thumbs.db
 # IDE/editor directories
 .vscode/
 .idea/
+.atl/
 
 # Coverage and temp
 coverage/
