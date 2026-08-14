@@ -1,11 +1,14 @@
 -- Seed data for TenoMerca (development only)
+-- Passwords are bcrypt hashes (never plaintext). Plain values used for evaluation:
+-- Admin: admin@tenomerca.test / AdminPass123!
+-- Comprador: buyer@tenomerca.test / BuyerPass123!
 
 INSERT INTO users (id, nombre, email, password, role, created_at) VALUES
-('USR-1', 'Admin', 'admin@tenomerca.test', 'AdminPass123!', 'admin', now())
+('USR-1', 'Admin', 'admin@tenomerca.test', '$2a$10$mYE7t40yHXNQUGBuBwKHN.T4hsdKqZjcO1iP4nGsA1iRnsg.MhtFS', 'admin', now())
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO users (id, nombre, email, password, role, created_at) VALUES
-('USR-2', 'Comprador', 'buyer@tenomerca.test', 'BuyerPass123!', 'comprador', now())
+('USR-2', 'Comprador', 'buyer@tenomerca.test', '$2a$10$ly6la6raXS9Qaj653GOcYuFY2eKz3p6OkKA0.iJia8m3BQu/NOBrW', 'comprador', now())
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO categories (id, nombre, slug) VALUES
