@@ -11,6 +11,9 @@ node_modules/
 
 # Google credentials and tokens
 *.json
+!backend/package.json
+!backend/package-lock.json
+
 credentials.json
 service-account-*.json
 token.json
