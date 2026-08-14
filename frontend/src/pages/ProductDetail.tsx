@@ -3,14 +3,24 @@ import { useParams } from 'react-router-dom'
 import Navbar from '../components/ui/Navbar'
 import productService from '../services/productService'
 import { normalizeDriveImageUrl } from '../utils/image'
+import { useCart } from '../context/CartContext'
 
 export default function ProductDetail(){
   const { id } = useParams()
   const [product, setProduct] = useState<any | null>(null)
+  const { addItem } = useCart()
+  const [added, setAdded] = useState(false)
 
   useEffect(() => {
     productService.getProductById(id).then(setProduct)
   }, [id])
+
+  const handleAdd = () => {
+    if (!product) return
+    addItem({ id: product.id, titulo: product.titulo, precio: Number(product.precio), archivo_url: product.archivo_url })
+    setAdded(true)
+    setTimeout(() => setAdded(false), 1500)
+  }
 
   if (!product) return (
     <div className="min-h-screen">
@@ -40,7 +50,7 @@ export default function ProductDetail(){
                 <span className={`px-3 py-1 rounded ${product.stock>0? 'bg-success text-white':'bg-gray-200 text-muted'}`}>
                   {product.stock>0? `En stock (${product.stock})` : 'Agotado'}
                 </span>
-                <button className="bg-primary text-white px-4 py-2 rounded">Agregar al carrito</button>
+                <button onClick={handleAdd} className="bg-primary text-white px-4 py-2 rounded">{added ? 'Agregado ✓' : 'Agregar al carrito'}</button>
               </div>
 
               <div className="mt-6 bg-surface p-4 rounded border border-border">

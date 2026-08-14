@@ -54,6 +54,20 @@ export default function OrderDetail(){
             </div>
           </section>
 
+          {(order.metodo_pago || order.estado_pago) && (
+            <section className="mt-4">
+              <h3 className="font-semibold">Pago</h3>
+              <div className="mt-2 flex items-center gap-4">
+                <div className="text-sm">Método: <span className="font-medium">{order.metodo_pago || '—'}</span></div>
+                <div className="text-sm flex items-center gap-1">
+                  Estado:
+                  <span className="px-2 py-1 rounded text-white" style={{ background: order.estado_pago === 'Pagado' ? '#67C23A' : '#E6A23C' }}>
+                    {order.estado_pago || '—'}
+                  </span>
+                </div>
+              </div>
+            </section>
+          )}
 
           <div className="mt-4">
             <Link to="/orders" className="px-4 py-2 rounded border border-border">Volver a mis pedidos</Link>
