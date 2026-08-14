@@ -26,7 +26,7 @@ export default function AdminProducts(){
   // Form state
   const [titulo, setTitulo] = useState('')
   const [precio, setPrecio] = useState('')
-  const [categoria, setCategoria] = useState<string | null>(null)
+  const [categoria, setCategoria] = useState<string | undefined>(undefined)
   const [categories, setCategories] = useState<any[]>([])
   const [editCategories, setEditCategories] = useState<any[]>([])
   const [errors, setErrors] = useState<{titulo?: string; precio?: string}>({})
@@ -110,7 +110,7 @@ export default function AdminProducts(){
   const [editTitulo, setEditTitulo] = useState('')
   const [editPrecio, setEditPrecio] = useState('')
   const [editSelectedFile, setEditSelectedFile] = useState<File | null>(null)
-  const [editCategoria, setEditCategoria] = useState<string | null>(null)
+  const [editCategoria, setEditCategoria] = useState<string | undefined>(undefined)
 
   const openEdit = (p: any) => {
     setEditTarget(p)
@@ -181,7 +181,7 @@ export default function AdminProducts(){
               <label className="block text-sm mb-1">Categoría</label>
               <select
                 className="p-2 border border-border rounded w-full"
-                value={categoria}
+                value={categoria ?? ''}
                 onChange={e=>setCategoria(e.target.value)}
                 disabled={loading}
               >
@@ -248,7 +248,7 @@ export default function AdminProducts(){
             <label className="block text-sm mb-1">Categoría</label>
             <select
               className="p-2 border border-border rounded w-full"
-              value={editCategoria}
+              value={editCategoria ?? ''}
               onChange={e=>setEditCategoria(e.target.value)}
               disabled={loading}
             >
