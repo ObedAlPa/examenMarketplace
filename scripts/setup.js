@@ -70,6 +70,40 @@ const runSeeds = () => {
   }
 }
 
+const parseDbName = (dbUrl) => {
+  try {
+    const url = new URL(dbUrl)
+    const dbName = decodeURIComponent(url.pathname.replace(/^\/+/, ''))
+    return dbName || 'postgres'
+  } catch (error) {
+    return 'postgres'
+  }
+}
+
+const ensureDatabaseExists = async (dbUrl, pgModule) => {
+  const { Client } = pgModule
+  const targetDb = parseDbName(dbUrl)
+  const fallbackUrl = new URL(dbUrl)
+  fallbackUrl.pathname = '/postgres'
+
+  const adminClient = new Client({ connectionString: fallbackUrl.toString() })
+  try {
+    await adminClient.connect()
+    const result = await adminClient.query('SELECT 1 FROM pg_database WHERE datname = $1', [targetDb])
+    if (result.rowCount === 0) {
+      await adminClient.query(`CREATE DATABASE "${targetDb}"`)
+      console.log(`Database "${targetDb}" was created because it did not exist.`)
+    } else {
+      console.log(`Database "${targetDb}" already exists.`)
+    }
+  } catch (error) {
+    console.warn('Could not create database automatically. Check that PostgreSQL is running and your credentials are valid.')
+    if (error && error.message) console.warn('Details:', error.message)
+  } finally {
+    await adminClient.end().catch(() => {})
+  }
+}
+
 const tryConnectToDatabase = () => {
   const backendEnv = readEnvFile(path.join(backendDir, '.env'))
   const dbUrl = backendEnv.DATABASE_URL && String(backendEnv.DATABASE_URL).trim()
@@ -101,7 +135,27 @@ const tryConnectToDatabase = () => {
       runMigrations()
       runSeeds()
     })
-    .catch((error) => {
+    .catch(async (error) => {
+      const message = (error && error.message) ? String(error.message).toLowerCase() : ''
+      const isMissingDatabase = message.includes('does not exist') || (error && error.code === '3D000')
+
+      if (isMissingDatabase) {
+        console.warn(`Database "${parseDbName(dbUrl)}" was not found. Creating it automatically...`)
+        await ensureDatabaseExists(dbUrl, pgModule)
+        const retry = new Client({ connectionString: dbUrl })
+        try {
+          await retry.connect()
+          console.log('PostgreSQL connection OK after database creation')
+          await retry.end()
+          runMigrations()
+          runSeeds()
+        } catch (retryError) {
+          console.warn('PostgreSQL is still unavailable after creation; please check permissions and credentials.')
+          if (retryError && retryError.message) console.warn('Details:', retryError.message)
+        }
+        return
+      }
+
       console.warn('PostgreSQL is not available or the URL is invalid. The app can still run in memory mode.')
       console.warn('To enable PostgreSQL, update backend/.env and run:')
       console.warn('  npm run migrate')

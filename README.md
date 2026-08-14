@@ -21,7 +21,8 @@ Eso deja el sistema listo para probarlo en local con:
 - instala dependencias del backend y frontend
 - crea `.env` y `.env.local` si no existen
 - intenta conectarse a PostgreSQL
-- si la base está disponible, ejecuta migraciones y seeds
+- si la base está disponible, verifica si la base de datos existe y la crea si hace falta
+- luego ejecuta migraciones y seeds
 
 ## Variables de entorno
 
