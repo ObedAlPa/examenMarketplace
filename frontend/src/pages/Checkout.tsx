@@ -47,8 +47,6 @@ export default function Checkout(){
   const [paymentMethod, setPaymentMethod] = useState('Tarjeta simulada')
   const [submitting, setSubmitting] = useState(false)
 
-  import { validateCheckout, validateCheckoutField } from '../services/form'
-
   const validate = () => {
     const newErrors = validateCheckout({ nombre, telefono, codigoPostal, calle, numero, colonia })
     setErrors(newErrors)

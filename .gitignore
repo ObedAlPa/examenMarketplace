@@ -11,8 +11,17 @@ node_modules/
 
 # Google credentials and tokens
 *.json
+
+# Project manifests and config files
+!package.json
+!package-lock.json
 !backend/package.json
 !backend/package-lock.json
+!frontend/package.json
+!frontend/package-lock.json
+!frontend/.env.example
+!frontend/vite.config.ts
+!scripts/*.js
 
 credentials.json
 service-account-*.json
