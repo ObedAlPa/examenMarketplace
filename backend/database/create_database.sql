@@ -49,3 +49,21 @@ CREATE TABLE IF NOT EXISTS addresses (
   pais TEXT,
   telefono TEXT
 );
+
+-- Carrito de compras: una fila por usuario+producto (id = product_id simplifica el contrato frontend)
+CREATE TABLE IF NOT EXISTS cart_items (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  titulo TEXT NOT NULL,
+  precio NUMERIC NOT NULL DEFAULT 0,
+  cantidad INTEGER NOT NULL DEFAULT 1 CHECK (cantidad > 0),
+  archivo_url TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  UNIQUE (user_id, id)
+);
+
+-- Pedidos: número legible, método y estado de pago independientes del estado logístico
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS numero_pedido TEXT;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS metodo_pago TEXT;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS estado_pago TEXT;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS direccion JSONB;

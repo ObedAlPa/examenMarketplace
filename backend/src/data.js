@@ -121,10 +121,13 @@ const addresses = [
   }
 ]
 
+const cartItems = []
+
 module.exports = {
   categories,
   products,
   users,
   orders,
-  addresses
+  addresses,
+  cartItems
 }

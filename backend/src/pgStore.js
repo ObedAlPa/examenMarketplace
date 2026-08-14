@@ -87,9 +87,41 @@ module.exports = {
     return res.rowCount > 0
   },
 
+  // Cart
+  async getCartByUserId(userId) {
+    const res = await db.query('SELECT * FROM cart_items WHERE user_id = $1 ORDER BY created_at', [userId])
+    return res.rows
+  },
+  async upsertCartItem(item) {
+    // Si el usuario+producto ya existe, suma la cantidad; si no, inserta.
+    const q = `INSERT INTO cart_items (id, user_id, titulo, precio, cantidad, archivo_url)
+               VALUES ($1,$2,$3,$4,$5,$6)
+               ON CONFLICT (user_id, id) DO UPDATE SET cantidad = cart_items.cantidad + EXCLUDED.cantidad
+               RETURNING *`;
+    const vals = [item.id, item.userId, item.titulo, item.precio, item.cantidad, item.archivo_url || null]
+    const res = await db.query(q, vals)
+    return res.rows[0]
+  },
+  async updateCartItem(id, userId, cantidad) {
+    const res = await db.query('UPDATE cart_items SET cantidad = $1 WHERE id = $2 AND user_id = $3 RETURNING *', [cantidad, id, userId])
+    return res.rows[0] || null
+  },
+  async deleteCartItem(id, userId) {
+    const res = await db.query('DELETE FROM cart_items WHERE id = $1 AND user_id = $2', [id, userId])
+    return res.rowCount > 0
+  },
+  async clearCart(userId) {
+    const res = await db.query('DELETE FROM cart_items WHERE user_id = $1', [userId])
+    return res.rowCount > 0
+  },
+
   // Orders
   async getOrders() {
     const res = await db.query('SELECT * FROM orders ORDER BY created_at DESC')
+    return res.rows
+  },
+  async getOrdersByUserId(userId) {
+    const res = await db.query('SELECT * FROM orders WHERE user_id = $1 ORDER BY created_at DESC', [userId])
     return res.rows
   },
   async getOrderById(id) {
@@ -97,8 +129,9 @@ module.exports = {
     return res.rows[0] || null
   },
   async createOrder(o) {
-    const q = `INSERT INTO orders (id,user_id,items,total,status,created_at) VALUES ($1,$2,$3,$4,$5,now()) RETURNING *`;
-    const vals = [o.id, o.userId, JSON.stringify(o.items||[]), o.total || 0, o.status || 'pending']
+    const q = `INSERT INTO orders (id,user_id,items,total,status,numero_pedido,metodo_pago,estado_pago,direccion,created_at)
+               VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,now()) RETURNING *`;
+    const vals = [o.id, o.userId, JSON.stringify(o.items||[]), o.total || 0, o.status || 'Pendiente', o.numero_pedido || null, o.metodo_pago || null, o.estado_pago || 'Pendiente', o.direccion ? JSON.stringify(o.direccion) : null]
     const res = await db.query(q, vals)
     return res.rows[0]
   },
@@ -107,9 +140,13 @@ module.exports = {
     if (!existing) return null
     const updated = { ...existing, ...patch }
     const q = `UPDATE orders SET items=$1, total=$2, status=$3 WHERE id=$4 RETURNING *`;
-    const vals = [JSON.stringify(updated.items||[]), updated.total||0, updated.status||'pending', id]
+    const vals = [JSON.stringify(updated.items||[]), updated.total||0, updated.status || 'Pendiente', id]
     const res = await db.query(q, vals)
     return res.rows[0]
+  },
+  async countOrders() {
+    const res = await db.query('SELECT COUNT(*) AS count FROM orders')
+    return Number(res.rows[0].count || 0)
   },
   async deleteOrder(id) {
     const res = await db.query('DELETE FROM orders WHERE id=$1', [id])

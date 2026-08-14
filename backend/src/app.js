@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken')
 const crypto = require('crypto')
 const bcrypt = require('bcrypt')
 const { normalizeDriveImageUrl } = require('./imageUrl')
-const { categories, products, users, orders, addresses } = require('./data')
+const { categories, products, users, orders, addresses, cartItems } = require('./data')
 // Ensure in-memory seed users have hashed passwords for local dev/tests
 for (let u of users) {
   if (u && u.password && !String(u.password).startsWith('$2')) {
@@ -23,6 +23,11 @@ try {
 
 const app = express()
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret'
+
+// Estados y métodos válidos para pedidos (whitelist: nada fuera de aquí entra)
+const ORDER_STATUSES = ['Pendiente', 'Confirmado', 'Preparando', 'Enviado', 'Entregado', 'Cancelado']
+const PAYMENT_METHODS = ['Tarjeta simulada', 'Transferencia simulada', 'Efectivo/OXXO simulada']
+const PAYMENT_STATUSES = ['Pendiente', 'Pagado']
 
 const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:5173,http://localhost:5174,http://localhost:5175,http://127.0.0.1:5173,http://127.0.0.1:5174,http://127.0.0.1:5175,http://192.168.101.15:5173,http://192.168.101.15:5174,http://192.168.101.15:5175,http://localhost:3000')
   .split(',')
@@ -404,6 +409,104 @@ app.delete('/api/users/:id', requireAuth, requireRole('admin'), (req, res) => {
   return res.status(204).send()
 })
 
+// ============================================================
+// Carrito de compras: una fila por usuario+producto. El userId SIEMPRE
+// sale del token (req.user.id), nunca del payload del cliente.
+// ============================================================
+app.get('/api/cart', requireAuth, async (req, res) => {
+  if (store) return res.json(await store.getCartByUserId(req.user.id))
+  return res.json(cartItems.filter((item) => item.userId === req.user.id))
+})
+
+app.post('/api/cart/items', requireAuth, async (req, res) => {
+  const { productId, cantidad } = req.body || {}
+  if (!productId) return res.status(400).json({ message: 'productId es requerido' })
+  const qty = Number(cantidad)
+  if (!Number.isInteger(qty) || qty < 1) {
+    return res.status(400).json({ message: 'cantidad debe ser un entero mayor o igual a 1' })
+  }
+
+  // Seguridad: titulo, precio y archivo_url SIEMPRE se toman del catálogo,
+  // nunca de lo que envía el cliente.
+  const product = store
+    ? normalizeProduct(await store.getProductById(productId))
+    : normalizeProduct(products.find((p) => p.id === productId))
+  if (!product) return sendNotFound(res, 'Producto')
+
+  if (store) {
+    const cart = await store.getCartByUserId(req.user.id)
+    const exists = cart.some((i) => i.id === product.id)
+    const created = await store.upsertCartItem({
+      id: product.id,
+      userId: req.user.id,
+      titulo: product.titulo,
+      precio: product.precio,
+      cantidad: qty,
+      archivo_url: product.archivo_url
+    })
+    return res.status(exists ? 200 : 201).json(created)
+  }
+
+  const existing = cartItems.find((i) => i.userId === req.user.id && i.id === product.id)
+  if (existing) {
+    existing.cantidad += qty
+    return res.json(existing)
+  }
+
+  const item = {
+    id: product.id,
+    userId: req.user.id,
+    titulo: product.titulo,
+    precio: product.precio,
+    cantidad: qty,
+    archivo_url: product.archivo_url
+  }
+  cartItems.push(item)
+  return res.status(201).json(item)
+})
+
+app.put('/api/cart/items/:id', requireAuth, async (req, res) => {
+  const qty = Number((req.body || {}).cantidad)
+  if (!Number.isInteger(qty) || qty < 1) {
+    return res.status(400).json({ message: 'cantidad debe ser un entero mayor o igual a 1' })
+  }
+
+  if (store) {
+    const updated = await store.updateCartItem(req.params.id, req.user.id, qty)
+    if (!updated) return sendNotFound(res, 'Item del carrito')
+    return res.json(updated)
+  }
+
+  const item = cartItems.find((i) => i.userId === req.user.id && i.id === req.params.id)
+  if (!item) return sendNotFound(res, 'Item del carrito')
+  item.cantidad = qty
+  return res.json(item)
+})
+
+app.delete('/api/cart/items/:id', requireAuth, async (req, res) => {
+  if (store) {
+    const ok = await store.deleteCartItem(req.params.id, req.user.id)
+    if (!ok) return sendNotFound(res, 'Item del carrito')
+    return res.status(204).send()
+  }
+
+  const index = cartItems.findIndex((i) => i.userId === req.user.id && i.id === req.params.id)
+  if (index === -1) return sendNotFound(res, 'Item del carrito')
+  cartItems.splice(index, 1)
+  return res.status(204).send()
+})
+
+app.delete('/api/cart', requireAuth, async (req, res) => {
+  if (store) {
+    await store.clearCart(req.user.id)
+    return res.status(204).send()
+  }
+
+  const remaining = cartItems.filter((i) => i.userId !== req.user.id)
+  cartItems.splice(0, cartItems.length, ...remaining)
+  return res.status(204).send()
+})
+
 // Solo admin puede listar TODOS los pedidos
 app.get('/api/orders', requireRole('admin'), async (req, res) => {
   if (store) return res.json(await store.getOrders())
@@ -440,40 +543,104 @@ app.get('/api/orders/:id', requireAuth, async (req, res) => {
 
 app.post('/api/orders', requireAuth, async (req, res) => {
   const payload = req.body || {}
-  // Seguridad: el dueño del pedido SIEMPRE es el usuario autenticado.
-  // Se ignora payload.userId / payload.user_id para que un usuario no
-  // pueda crear pedidos a nombre de otro.
+
+  const requestedItems = Array.isArray(payload.items) ? payload.items : []
+  if (requestedItems.length === 0) {
+    return res.status(400).json({ message: 'El pedido debe incluir al menos un item' })
+  }
+
+  // Dirección mínima exigida al cliente (el resto de campos es opcional)
+  let direccion = payload.direccion || {}
+  if (typeof direccion === 'string') {
+    try { direccion = JSON.parse(direccion) } catch (e) { direccion = {} }
+  }
+  if (!direccion.nombre || !direccion.calle || !direccion.numero || !direccion.colonia) {
+    return res.status(400).json({ message: 'La dirección requiere nombre, calle, numero y colonia' })
+  }
+
+  const metodo_pago = payload.metodo_pago
+  if (!PAYMENT_METHODS.includes(metodo_pago)) {
+    return res.status(400).json({ message: `metodo_pago inválido. Usa uno de: ${PAYMENT_METHODS.join(', ')}` })
+  }
+
+  const estado_pago = payload.estado_pago || 'Pendiente'
+  if (!PAYMENT_STATUSES.includes(estado_pago)) {
+    return res.status(400).json({ message: `estado_pago inválido. Usa uno de: ${PAYMENT_STATUSES.join(', ')}` })
+  }
+
+  // Seguridad: el total se recalcula SIEMPRE server-side con el precio del
+  // catálogo. Cualquier precio enviado por el cliente se IGNORA.
+  const items = []
+  let total = 0
+  for (const requested of requestedItems) {
+    const product = store
+      ? await store.getProductById(requested.id)
+      : products.find((p) => p.id === requested.id)
+    if (!product) {
+      return res.status(400).json({ message: `El producto ${requested.id} no existe` })
+    }
+    const cantidad = Number(requested.cantidad)
+    if (!Number.isInteger(cantidad) || cantidad < 1) {
+      return res.status(400).json({ message: `cantidad del producto ${requested.id} debe ser un entero mayor o igual a 1` })
+    }
+    const precio = Number(product.precio) || 0
+    items.push({
+      id: product.id,
+      titulo: product.titulo,
+      precio,
+      cantidad,
+      archivo_url: normalizeDriveImageUrl(product.archivo_url)
+    })
+    total += precio * cantidad
+  }
+
+  // Número de pedido legible y secuencial
+  const count = store ? await store.countOrders() : orders.length
+  const numero_pedido = 'TM-' + String(1000 + count)
+
   const order = {
-    id: payload.id || withId('ORD'),
+    id: withId('ORD'),
     userId: req.user.id,
-    items: Array.isArray(payload.items) ? payload.items : [],
-    total: Number(payload.total || 0),
-    status: payload.status || 'pending'
+    items,
+    total,
+    status: 'Pendiente',
+    numero_pedido,
+    metodo_pago,
+    estado_pago,
+    direccion
   }
 
   if (store) {
     const created = await store.createOrder(order)
+    await store.clearCart(req.user.id)
     return res.status(201).json(created)
   }
 
   order.created_at = new Date().toISOString()
   orders.push(order)
+  // Al crear el pedido se vacía el carrito del usuario
+  const remainingCart = cartItems.filter((i) => i.userId !== req.user.id)
+  cartItems.splice(0, cartItems.length, ...remainingCart)
   return res.status(201).json(order)
 })
 
 // Solo admin puede actualizar o eliminar pedidos
 app.put('/api/orders/:id', requireAuth, requireRole('admin'), async (req, res) => {
+  const { status } = req.body || {}
+  if (!ORDER_STATUSES.includes(status)) {
+    return res.status(400).json({ message: `status inválido. Usa uno de: ${ORDER_STATUSES.join(', ')}` })
+  }
+
   if (store) {
-    const updated = await store.updateOrder(req.params.id, req.body)
+    const updated = await store.updateOrder(req.params.id, { status })
     if (!updated) return sendNotFound(res, 'Pedido')
     return res.json(updated)
   }
 
-  const index = orders.findIndex((item) => item.id === req.params.id)
-  if (index === -1) return sendNotFound(res, 'Pedido')
-
-  orders[index] = { ...orders[index], ...req.body }
-  return res.json(orders[index])
+  const order = orders.find((item) => item.id === req.params.id)
+  if (!order) return sendNotFound(res, 'Pedido')
+  order.status = status
+  return res.json(order)
 })
 
 app.delete('/api/orders/:id', requireAuth, requireRole('admin'), async (req, res) => {
