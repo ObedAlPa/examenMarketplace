@@ -57,6 +57,60 @@ Variables de entorno del frontend (archivo `.env` para Vite, p.e. `.env.local`):
 - VITE_API_URL — URL del backend (ej. http://localhost:4000)
 
 
+### Probar integración local (backend ↔ frontend)
+
+1) Levantar backend localmente:
+
+   - Entrar a la carpeta backend:
+
+       cd backend
+
+   - Copiar ejemplo de variables y ajustar `JWT_SECRET` y `PORT` si es necesario:
+
+       cp .env.example .env
+       # Editar .env para ajustar JWT_SECRET (por ejemplo: JWT_SECRET=change-this-secret)
+
+   - Instalar dependencias (si no existen):
+
+       npm install
+
+   - Levantar el servidor de desarrollo:
+
+       npm run dev
+
+   - Verificar health:
+
+       curl http://localhost:4000/api/health
+
+2) Levantar frontend y apuntar a la API:
+
+   - En la carpeta raíz del frontend crear `.env.local` o `.env` con:
+
+       VITE_API_URL=http://localhost:4000
+
+   - Instalar dependencias y ejecutar Vite:
+
+       cd frontend
+       npm install
+       npm run dev
+
+3) Probar flujo de autenticación y permisos:
+
+   - Login con cuenta de prueba (admin):
+       email: admin@tenomerca.test
+       password: AdminPass123!
+
+   - Tras login exitoso, el frontend guardará el token JWT en localStorage (clave: `tenomerca_token`) y el apiClient lo adjuntará en la cabecera Authorization: `Bearer <token>` para llamadas autenticadas.
+
+   - Probar crear/editar/eliminar recursos admin desde la UI (Admin — Productos/Categorías/Usuarios). Si el token falta o el role es distinto a `admin`, el backend responderá 401/403 y el frontend redirigirá a / o /auth/login según corresponda.
+
+4) Notas de seguridad y pruebas:
+
+   - Para pruebas locales está permitido usar JWT_SECRET simple; en producción usar un secreto fuerte y rotarlo cuando sea necesario.
+   - Si quieres ejecutar los tests backend sin instalar globalmente dependencias de proyecto, en la carpeta `backend/` existe un package.json mínimo que puede usarse para instalar dependencias de test (supertest) y ejecutar los tests de integración con `node --test`.
+
+
+
 ## Primeros pasos (rápido)
 1. Clonar el repositorio
    git clone https://github.com/ObedAlPa/examenMarketplace.git
