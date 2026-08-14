@@ -3,6 +3,8 @@ const cors = require('cors')
 const jwt = require('jsonwebtoken')
 const crypto = require('crypto')
 const bcrypt = require('bcrypt')
+const multer = require('multer')
+const drive = require('./drive')
 const { normalizeDriveImageUrl } = require('./imageUrl')
 const { categories, products, users, orders, addresses, cartItems } = require('./data')
 // Ensure in-memory seed users have hashed passwords for local dev/tests
@@ -23,6 +25,9 @@ try {
 
 const app = express()
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret'
+
+// Subida de imágenes en memoria (máx 5MB). El archivo NO se guarda en disco.
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } })
 
 // Estados y métodos válidos para pedidos (whitelist: nada fuera de aquí entra)
 const ORDER_STATUSES = ['Pendiente', 'Confirmado', 'Preparando', 'Enviado', 'Entregado', 'Cancelado']
@@ -770,7 +775,44 @@ app.get('/api/codigo-postal/:cp', async (req, res) => {
   })
 })
 
+// ============================================================
+// POST /api/upload — Sube una imagen de producto a Google Drive.
+// Solo admin. Devuelve drive://<fileId>, que el frontend normaliza
+// a una URL pública de Drive (ver backend/src/imageUrl.js).
+// Sin credenciales de Drive el endpoint responde 503 (degradado
+// elegante, nunca un 500 crasheado).
+// ============================================================
+app.post('/api/upload', requireAuth, requireRole('admin'), upload.single('image'), async (req, res) => {
+  if (!drive.isConfigured) {
+    return res.status(503).json({
+      message: 'Google Drive no configurado. Define GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REFRESH_TOKEN y GOOGLE_DRIVE_FOLDER_ID en el .env (ver README).'
+    })
+  }
+
+  // Multer rechaza con 413 los archivos mayores a 5MB; aquí validamos el resto
+  const file = req.file
+  if (!file || !String(file.mimetype || '').startsWith('image/')) {
+    return res.status(400).json({ message: 'Se requiere un archivo de imagen' })
+  }
+
+  try {
+    const { fileId } = await drive.uploadImage({
+      buffer: file.buffer,
+      mimeType: file.mimetype,
+      filename: Date.now() + '-' + file.originalname
+    })
+    return res.json({ archivo_url: 'drive://' + fileId })
+  } catch (error) {
+    console.error('Error subiendo imagen a Google Drive:', error && error.message)
+    return res.status(500).json({ message: 'Error interno del servidor' })
+  }
+})
+
 app.use((err, req, res, next) => {
+  // El límite de tamaño de multer (5MB) se traduce a 413, no a 500
+  if (err && err.code === 'LIMIT_FILE_SIZE') {
+    return res.status(413).json({ message: 'El archivo supera el tamaño máximo de 5MB' })
+  }
   console.error(err)
   return res.status(500).json({ message: 'Error interno del servidor' })
 })
