@@ -23,11 +23,12 @@ export default function AdminProducts(){
   const [products, setProducts] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
 
-  // create form state
+  // Form state
   const [titulo, setTitulo] = useState('')
   const [precio, setPrecio] = useState('')
   const [categoria, setCategoria] = useState<string | null>(null)
   const [categories, setCategories] = useState<any[]>([])
+  const [editCategories, setEditCategories] = useState<any[]>([])
   const [errors, setErrors] = useState<{titulo?: string; precio?: string}>({})
 
   useEffect(() => {
@@ -43,9 +44,20 @@ export default function AdminProducts(){
   }
 
   const loadCategories = async () => {
-    const list = await productService.getCategories()
-    setCategories(list)
+    try {
+      const list = await productService.getCategories()
+      setCategories(list)
+      // Cargar también para el modal de edición
+      setEditCategories(list)
+    } catch (e) {
+      console.error('Error cargando categorías:', e)
+    }
   }
+
+  // Efecto adicional para cargar categorías en el modal
+  useEffect(() => {
+    loadCategories()
+  }, [])
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
@@ -62,13 +74,13 @@ export default function AdminProducts(){
 
     setUploading(true)
     setUploadMessage(null)
-    // Buscar el ID de categoría por su nombre seleccionado
-    const catSel = categories.find(c => c.nombre === categoria) || {}
+    // Buscar categoría por nombre seleccionado
+    const catSel = categories.find((c: any) => c.nombre === categoria) || { id: '', nombre: '' }
     const p: any = { 
       id: 'PRD-' + Date.now(), 
       titulo: titulo.trim(), 
       precio: precioNum, 
-      categoria_id: catSel.id || catSel.categoria_id || null,
+      categoria_id: catSel.id || '',
       categoria: catSel.nombre || ''
     }
     if (selectedFile) {
@@ -98,17 +110,14 @@ export default function AdminProducts(){
   const [editTitulo, setEditTitulo] = useState('')
   const [editPrecio, setEditPrecio] = useState('')
   const [editSelectedFile, setEditSelectedFile] = useState<File | null>(null)
-  const [editCategories, setEditCategories] = useState<any[]>([])
+  const [editCategoria, setEditCategoria] = useState<string | null>(null)
+
   const openEdit = (p: any) => {
     setEditTarget(p)
     setEditTitulo(p.titulo || '')
     setEditPrecio(String(p.precio || '0'))
-    // Cargar categorías para el edit modal
-    loadCategories().then(() => {
-      setEditCategories(categories)
-    })
-    setEditSelectedFile(null)
-    setUploadMessage(null)
+    // Cargar categorías para el modal (usar el state editCategories ya cargado)
+    setEditCategoria(p.categoria || '')
     setShowEditModal(true)
   }
   const doEdit = async () => {
@@ -134,7 +143,8 @@ export default function AdminProducts(){
         else setUploadMessage('Imagen no subida. El producto se guardará sin imagen.')
       }
     }
-    // Asegurarse de incluir categoría en el parche
+    // Incluir categoría en el parche
+    const editCatSel = editCategories.find((c: any) => c.nombre === editCategoria) || {}
     patch.categoria_id = catSel.id || editTarget.categoria_id
     patch.categoria = catSel.nombre || editTarget.categoria || ''
     await productService.updateProduct(editTarget.id, patch)
@@ -150,16 +160,11 @@ export default function AdminProducts(){
     await load()
   }
 
-  // Cargar categorías al iniciar
-  useEffect(() => {
-    loadCategories()
-  }, [])
-
   return (
     <div className="min-h-screen">
       <Navbar />
       <main className="max-w-6xl mx-auto p-4">
-        <h1 className="text-2xl font-bold mb-4">Admin — Productos (CRUD)</h1>
+        <h1 className="text-2xl font-bold mb-4">Admin — Productos</h1>
         <div className="bg-white p-4 rounded border border-border">
           <p className="mb-4 text-sm text-muted">Gestión de productos con persistencia en backend.</p>
 
@@ -180,7 +185,7 @@ export default function AdminProducts(){
                 onChange={e=>setCategoria(e.target.value)}
                 disabled={loading}
               >
-                <option value="" disabled>{categorías.length === 0 ? 'Cargando categorías...' : 'Seleccione una categoría'}</option>
+                <option value="" disabled>{categories.length === 0 ? 'Cargando categorías...' : 'Seleccione una categoría'}</option>
                 {categories.map((c: any) => (
                   <option key={c.id} value={c.nombre}>
                     {c.nombre}
@@ -247,7 +252,7 @@ export default function AdminProducts(){
               onChange={e=>setEditCategoria(e.target.value)}
               disabled={loading}
             >
-              <option value="" disabled>{categorías.length === 0 ? 'Cargando categorías...' : 'Seleccione una categoría'}</option>
+              <option value="" disabled>{editCategories.length === 0 ? 'Cargando categorías...' : 'Seleccione una categoría'}</option>
               {editCategories.map((c: any) => (
                 <option key={c.id} value={c.nombre}>
                   {c.nombre}
