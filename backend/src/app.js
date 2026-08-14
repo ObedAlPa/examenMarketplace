@@ -816,7 +816,21 @@ app.post('/api/upload', requireAuth, requireRole('admin'), upload.single('image'
     })
     return res.json({ archivo_url: 'drive://' + fileId })
   } catch (error) {
+    const msg = String((error && error.message) || '').toLowerCase()
+    // OAuth2 failures (credenciales vencidas/revocadas/inválidas) → degradar
+    // graceful a 503 en lugar de 500, para que el producto se guarde igual.
+    const isAuthError =
+      msg.includes('unauthorized_client') ||
+      msg.includes('invalid_grant') ||
+      msg.includes('invalid_client') ||
+      msg.includes('invalid_token') ||
+      msg.includes('unauthorized')
     console.error('Error subiendo imagen a Google Drive:', error && error.message)
+    if (isAuthError) {
+      return res.status(503).json({
+        message: 'Google Drive no configurado o credenciales inválidas. Define GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REFRESH_TOKEN y GOOGLE_DRIVE_FOLDER_ID en el .env (ver README).'
+      })
+    }
     return res.status(500).json({ message: 'Error interno del servidor' })
   }
 })
