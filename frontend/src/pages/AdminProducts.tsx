@@ -5,7 +5,6 @@ import Navbar from '../components/ui/Navbar'
 import productService from '../services/productService'
 import { v4 as uuidv4 } from 'uuid'
 import SimpleModal from '../components/ui/SimpleModal'
-import { normalizeDriveImageUrl } from '../utils/image'
 
 export default function AdminProducts(){
   const navigate = useNavigate()
@@ -27,10 +26,13 @@ export default function AdminProducts(){
   // create form state
   const [titulo, setTitulo] = useState('')
   const [precio, setPrecio] = useState('')
-  const [categoria, setCategoria] = useState('')
+  const [categoria, setCategoria] = useState<string | null>(null)
+  const [categories, setCategories] = useState<any[]>([])
+  const [errors, setErrors] = useState<{titulo?: string; precio?: string}>({})
 
   useEffect(() => {
     load()
+    loadCategories()
   }, [])
 
   const load = async () => {
@@ -40,7 +42,10 @@ export default function AdminProducts(){
     setLoading(false)
   }
 
-  const [errors, setErrors] = useState<{titulo?: string; precio?: string}>({})
+  const loadCategories = async () => {
+    const list = await productService.getCategories()
+    setCategories(list)
+  }
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
@@ -57,10 +62,18 @@ export default function AdminProducts(){
 
     setUploading(true)
     setUploadMessage(null)
-    const p: any = { id: 'PRD-' + Date.now(), titulo: titulo.trim(), precio: precioNum, categoria }
+    // Buscar el ID de categoría por su nombre seleccionado
+    const catSel = categories.find(c => c.nombre === categoria) || {}
+    const p: any = { 
+      id: 'PRD-' + Date.now(), 
+      titulo: titulo.trim(), 
+      precio: precioNum, 
+      categoria_id: catSel.id || catSel.categoria_id || null,
+      categoria: catSel.nombre || ''
+    }
     if (selectedFile) {
       try {
-        const res = await productService.uploadImage(selectedFile, categoria)
+        const res = await productService.uploadImage(selectedFile, catSel.nombre || undefined)
         if (res && res.archivo_url) p.archivo_url = res.archivo_url
       } catch (e: any) {
         if (e && e.status === 503) setUploadMessage('Imagen no subida: Google Drive no configurado. El producto se guardará sin imagen.')
@@ -85,7 +98,19 @@ export default function AdminProducts(){
   const [editTitulo, setEditTitulo] = useState('')
   const [editPrecio, setEditPrecio] = useState('')
   const [editSelectedFile, setEditSelectedFile] = useState<File | null>(null)
-  const openEdit = (p: any) => { setEditTarget(p); setEditTitulo(p.titulo || ''); setEditPrecio(String(p.precio || '0')); setEditSelectedFile(null); setUploadMessage(null); setShowEditModal(true) }
+  const [editCategories, setEditCategories] = useState<any[]>([])
+  const openEdit = (p: any) => {
+    setEditTarget(p)
+    setEditTitulo(p.titulo || '')
+    setEditPrecio(String(p.precio || '0'))
+    // Cargar categorías para el edit modal
+    loadCategories().then(() => {
+      setEditCategories(categories)
+    })
+    setEditSelectedFile(null)
+    setUploadMessage(null)
+    setShowEditModal(true)
+  }
   const doEdit = async () => {
     if (uploading) return
     const nextErr: any = {}
@@ -98,16 +123,20 @@ export default function AdminProducts(){
 
     setUploading(true)
     setUploadMessage(null)
+    const catSel = editCategories.find((c: any) => c.nombre === editCategoria) || {}
     const patch: any = { titulo: editTitulo.trim(), precio: precioNum }
     if (editSelectedFile) {
       try {
-        const res = await productService.uploadImage(editSelectedFile)
+        const res = await productService.uploadImage(editSelectedFile, editCategoria)
         if (res && res.archivo_url) patch.archivo_url = res.archivo_url
       } catch (e: any) {
         if (e && e.status === 503) setUploadMessage('Imagen no subida: Google Drive no configurado. El producto se guardará sin imagen.')
         else setUploadMessage('Imagen no subida. El producto se guardará sin imagen.')
       }
     }
+    // Asegurarse de incluir categoría en el parche
+    patch.categoria_id = catSel.id || editTarget.categoria_id
+    patch.categoria = catSel.nombre || editTarget.categoria || ''
     await productService.updateProduct(editTarget.id, patch)
     setUploading(false)
     setShowEditModal(false)
@@ -121,13 +150,18 @@ export default function AdminProducts(){
     await load()
   }
 
+  // Cargar categorías al iniciar
+  useEffect(() => {
+    loadCategories()
+  }, [])
+
   return (
     <div className="min-h-screen">
       <Navbar />
       <main className="max-w-6xl mx-auto p-4">
-        <h1 className="text-2xl font-bold mb-4">Admin — Productos (CRUD mock)</h1>
+        <h1 className="text-2xl font-bold mb-4">Admin — Productos (CRUD)</h1>
         <div className="bg-white p-4 rounded border border-border">
-          <p className="mb-4 text-sm text-muted">Vista mock para crear/editar/eliminar productos. Persistencia local (mock) mediante productService; reemplazar por API en backend.</p>
+          <p className="mb-4 text-sm text-muted">Gestión de productos con persistencia en backend.</p>
 
           <div className="mb-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
             <div>
@@ -139,7 +173,20 @@ export default function AdminProducts(){
               {errors.precio && <div className="text-sm text-red-600 mt-1">{errors.precio}</div>}
             </div>
             <div>
-              <input className="p-2 border border-border rounded w-full" placeholder="Categoría" value={categoria} onChange={e=>setCategoria(e.target.value)} />
+              <label className="block text-sm mb-1">Categoría</label>
+              <select
+                className="p-2 border border-border rounded w-full"
+                value={categoria}
+                onChange={e=>setCategoria(e.target.value)}
+                disabled={loading}
+              >
+                <option value="" disabled>{categorías.length === 0 ? 'Cargando categorías...' : 'Seleccione una categoría'}</option>
+                {categories.map((c: any) => (
+                  <option key={c.id} value={c.nombre}>
+                    {c.nombre}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
           <div className="mb-4 flex items-center space-x-4">
@@ -147,13 +194,13 @@ export default function AdminProducts(){
             {selectedFile && <img src={URL.createObjectURL(selectedFile)} alt="Vista previa" className="w-16 h-16 object-cover rounded border border-border" />}
           </div>
           <div className="mb-6">
-            <button className="px-3 py-2 bg-primary text-white rounded disabled:opacity-50" onClick={handleCreate} disabled={uploading}>{uploading ? 'Subiendo...' : 'Crear producto (mock)'}</button>
+            <button className="px-3 py-2 bg-primary text-white rounded disabled:opacity-50" onClick={handleCreate} disabled={uploading || !categoria}>{uploading ? 'Subiendo...' : 'Crear producto'}</button>
             {uploadMessage && <div className="text-sm text-red-600 mt-2">{uploadMessage}</div>}
           </div>
 
           <div className="space-y-2">
             {loading ? <div className="text-sm text-muted">Cargando...</div> : (
-              products.length === 0 ? <div className="text-sm text-muted">No hay productos mock.</div> : products.map(p => (
+              products.length === 0 ? <div className="text-sm text-muted">No hay productos.</div> : products.map(p => (
                 <div key={p.id} className="flex justify-between items-center p-2 border border-border rounded">
                   <div className="w-2/3">
                     <div className="font-semibold">{p.titulo}</div>
@@ -177,7 +224,7 @@ export default function AdminProducts(){
       </main>
 
       <SimpleModal visible={showDeleteModal} title="Eliminar producto" onCancel={()=>{ setShowDeleteModal(false); setDeleteTarget(null) }} onConfirm={doDelete} confirmText="Eliminar" cancelText="Cancelar">
-        <p>¿Estás seguro de eliminar este producto mock? Esta acción no se puede deshacer en el mock local.</p>
+        <p>¿Estás seguro de eliminar este producto? Esta acción no se puede deshacer.</p>
       </SimpleModal>
 
       <SimpleModal visible={showEditModal} title="Editar producto" onCancel={()=>{ setShowEditModal(false); setEditTarget(null) }} onConfirm={doEdit} confirmText={uploading ? 'Subiendo...' : 'Guardar'} cancelText="Cancelar">
@@ -193,12 +240,28 @@ export default function AdminProducts(){
             {errors.precio && <div className="text-sm text-red-600 mt-1">{errors.precio}</div>}
           </div>
           <div>
+            <label className="block text-sm mb-1">Categoría</label>
+            <select
+              className="p-2 border border-border rounded w-full"
+              value={editCategoria}
+              onChange={e=>setEditCategoria(e.target.value)}
+              disabled={loading}
+            >
+              <option value="" disabled>{categorías.length === 0 ? 'Cargando categorías...' : 'Seleccione una categoría'}</option>
+              {editCategories.map((c: any) => (
+                <option key={c.id} value={c.nombre}>
+                  {c.nombre}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
             <label className="block text-sm mb-1">Imagen</label>
             <input type="file" accept="image/*" className="text-sm" onChange={e=>setEditSelectedFile(e.target.files?.[0] || null)} />
             <div className="mt-2">
               {editSelectedFile
                 ? <img src={URL.createObjectURL(editSelectedFile)} alt="Vista previa" className="w-16 h-16 object-cover rounded border border-border" />
-                : editTarget?.archivo_url && <img src={normalizeDriveImageUrl(editTarget.archivo_url)} alt="Imagen del producto" className="w-16 h-16 object-cover rounded border border-border" />}
+                : editTarget?.archivo_url && <img src={editTarget.archivo_url} alt="Imagen del producto" className="w-16 h-16 object-cover rounded border border-border" />}
             </div>
             {uploadMessage && <div className="text-sm text-red-600 mt-2">{uploadMessage}</div>}
           </div>
