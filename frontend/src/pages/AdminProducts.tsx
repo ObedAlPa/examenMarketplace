@@ -5,6 +5,7 @@ import Navbar from '../components/ui/Navbar'
 import productService from '../services/productService'
 import { v4 as uuidv4 } from 'uuid'
 import SimpleModal from '../components/ui/SimpleModal'
+import { normalizeDriveImageUrl } from '../utils/image'
 
 export default function AdminProducts(){
   const navigate = useNavigate()
@@ -41,7 +42,12 @@ export default function AdminProducts(){
 
   const [errors, setErrors] = useState<{titulo?: string; precio?: string}>({})
 
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [uploading, setUploading] = useState(false)
+  const [uploadMessage, setUploadMessage] = useState<string | null>(null)
+
   const handleCreate = async () => {
+    if (uploading) return
     const nextErr: any = {}
     if (!titulo || titulo.trim().length < 1) nextErr.titulo = 'Título requerido'
     const precioNum = Number(precio)
@@ -49,9 +55,21 @@ export default function AdminProducts(){
     setErrors(nextErr)
     if (Object.keys(nextErr).length > 0) return
 
-    const p = { id: 'PRD-' + Date.now(), titulo: titulo.trim(), precio: precioNum, categoria }
+    setUploading(true)
+    setUploadMessage(null)
+    const p: any = { id: 'PRD-' + Date.now(), titulo: titulo.trim(), precio: precioNum, categoria }
+    if (selectedFile) {
+      try {
+        const res = await productService.uploadImage(selectedFile)
+        if (res && res.archivo_url) p.archivo_url = res.archivo_url
+      } catch (e: any) {
+        if (e && e.status === 503) setUploadMessage('Imagen no subida: Google Drive no configurado. El producto se guardará sin imagen.')
+        else setUploadMessage('Imagen no subida. El producto se guardará sin imagen.')
+      }
+    }
     await productService.createProduct(p)
-    setTitulo(''); setPrecio(''); setCategoria('')
+    setUploading(false)
+    setTitulo(''); setPrecio(''); setCategoria(''); setSelectedFile(null)
     await load()
   }
 
@@ -66,8 +84,10 @@ export default function AdminProducts(){
   const [editTarget, setEditTarget] = useState<any | null>(null)
   const [editTitulo, setEditTitulo] = useState('')
   const [editPrecio, setEditPrecio] = useState('')
-  const openEdit = (p: any) => { setEditTarget(p); setEditTitulo(p.titulo || ''); setEditPrecio(String(p.precio || '0')); setShowEditModal(true) }
+  const [editSelectedFile, setEditSelectedFile] = useState<File | null>(null)
+  const openEdit = (p: any) => { setEditTarget(p); setEditTitulo(p.titulo || ''); setEditPrecio(String(p.precio || '0')); setEditSelectedFile(null); setUploadMessage(null); setShowEditModal(true) }
   const doEdit = async () => {
+    if (uploading) return
     const nextErr: any = {}
     if (!editTitulo || editTitulo.trim().length < 1) nextErr.titulo = 'Título requerido'
     const precioNum = Number(editPrecio)
@@ -75,9 +95,24 @@ export default function AdminProducts(){
     setErrors(nextErr)
     if (Object.keys(nextErr).length > 0) return
     if (!editTarget) return
-    await productService.updateProduct(editTarget.id, { titulo: editTitulo.trim(), precio: precioNum })
+
+    setUploading(true)
+    setUploadMessage(null)
+    const patch: any = { titulo: editTitulo.trim(), precio: precioNum }
+    if (editSelectedFile) {
+      try {
+        const res = await productService.uploadImage(editSelectedFile)
+        if (res && res.archivo_url) patch.archivo_url = res.archivo_url
+      } catch (e: any) {
+        if (e && e.status === 503) setUploadMessage('Imagen no subida: Google Drive no configurado. El producto se guardará sin imagen.')
+        else setUploadMessage('Imagen no subida. El producto se guardará sin imagen.')
+      }
+    }
+    await productService.updateProduct(editTarget.id, patch)
+    setUploading(false)
     setShowEditModal(false)
     setEditTarget(null)
+    setEditSelectedFile(null)
     await load()
   }
 
@@ -107,8 +142,13 @@ export default function AdminProducts(){
               <input className="p-2 border border-border rounded w-full" placeholder="Categoría" value={categoria} onChange={e=>setCategoria(e.target.value)} />
             </div>
           </div>
+          <div className="mb-4 flex items-center space-x-4">
+            <input type="file" accept="image/*" className="text-sm" onChange={e=>setSelectedFile(e.target.files?.[0] || null)} />
+            {selectedFile && <img src={URL.createObjectURL(selectedFile)} alt="Vista previa" className="w-16 h-16 object-cover rounded border border-border" />}
+          </div>
           <div className="mb-6">
-            <button className="px-3 py-2 bg-primary text-white rounded" onClick={handleCreate}>Crear producto (mock)</button>
+            <button className="px-3 py-2 bg-primary text-white rounded disabled:opacity-50" onClick={handleCreate} disabled={uploading}>{uploading ? 'Subiendo...' : 'Crear producto (mock)'}</button>
+            {uploadMessage && <div className="text-sm text-red-600 mt-2">{uploadMessage}</div>}
           </div>
 
           <div className="space-y-2">
@@ -140,7 +180,7 @@ export default function AdminProducts(){
         <p>¿Estás seguro de eliminar este producto mock? Esta acción no se puede deshacer en el mock local.</p>
       </SimpleModal>
 
-      <SimpleModal visible={showEditModal} title="Editar producto" onCancel={()=>{ setShowEditModal(false); setEditTarget(null) }} onConfirm={doEdit} confirmText="Guardar" cancelText="Cancelar">
+      <SimpleModal visible={showEditModal} title="Editar producto" onCancel={()=>{ setShowEditModal(false); setEditTarget(null) }} onConfirm={doEdit} confirmText={uploading ? 'Subiendo...' : 'Guardar'} cancelText="Cancelar">
         <div className="grid grid-cols-1 gap-2">
           <div>
             <label className="block text-sm mb-1">Título</label>
@@ -151,6 +191,16 @@ export default function AdminProducts(){
             <label className="block text-sm mb-1">Precio</label>
             <input className="p-2 border border-border rounded w-full" value={editPrecio} onChange={e=>setEditPrecio(e.target.value)} />
             {errors.precio && <div className="text-sm text-red-600 mt-1">{errors.precio}</div>}
+          </div>
+          <div>
+            <label className="block text-sm mb-1">Imagen</label>
+            <input type="file" accept="image/*" className="text-sm" onChange={e=>setEditSelectedFile(e.target.files?.[0] || null)} />
+            <div className="mt-2">
+              {editSelectedFile
+                ? <img src={URL.createObjectURL(editSelectedFile)} alt="Vista previa" className="w-16 h-16 object-cover rounded border border-border" />
+                : editTarget?.archivo_url && <img src={normalizeDriveImageUrl(editTarget.archivo_url)} alt="Imagen del producto" className="w-16 h-16 object-cover rounded border border-border" />}
+            </div>
+            {uploadMessage && <div className="text-sm text-red-600 mt-2">{uploadMessage}</div>}
           </div>
         </div>
       </SimpleModal>

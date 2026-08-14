@@ -106,6 +106,17 @@ export const updateProduct = async (id: string, patch: any) => {
   return list[idx]
 }
 
+export const uploadImage = async (file: File) => {
+  if (API_BASE) {
+    const formData = new FormData()
+    formData.append('image', file)
+    return apiClient.apiFetch('/api/upload', { method: 'POST', body: formData })
+  }
+
+  await new Promise(res => setTimeout(res, 80))
+  return { archivo_url: '/placeholder.svg' }
+}
+
 export const deleteProduct = async (id: string) => {
   if (API_BASE) {
     await apiClient.apiFetch(`/api/products/${id}`, { method: 'DELETE' })
@@ -128,4 +139,5 @@ export default {
   createProduct,
   updateProduct,
   deleteProduct,
+  uploadImage,
 }
