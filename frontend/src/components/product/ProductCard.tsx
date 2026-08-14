@@ -1,5 +1,6 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
+import { normalizeDriveImageUrl } from '../../utils/image'
 
 type Product = {
   id: string;
@@ -22,7 +23,7 @@ export default function ProductCard({product}:{product:Product}){
     <div className="bg-surface border border-border rounded-lg p-4 shadow-sm">
       <Link to={`/product/${product.id}`} className="block">
         <div className="w-full h-40 bg-gray-100 rounded-md mb-3 flex items-center justify-center overflow-hidden">
-          <img src={product.archivo_url || '/placeholder.png'} alt={product.titulo} className="object-cover h-full w-full rounded-md" />
+          <img src={normalizeDriveImageUrl(product.archivo_url)} alt={product.titulo} className="object-cover h-full w-full rounded-md" />
         </div>
         <h4 className="text-base font-semibold text-text">{product.titulo}</h4>
       </Link>

@@ -1,6 +1,7 @@
 import React from 'react'
 import Navbar from '../components/ui/Navbar'
 import { useCart } from '../context/CartContext'
+import { normalizeDriveImageUrl } from '../utils/image'
 
 export default function Cart(){
   const { items, updateQuantity, removeItem, total, clear } = useCart()
@@ -17,7 +18,7 @@ export default function Cart(){
             <div className="md:col-span-2 bg-white p-4 rounded border border-border">
               {items.map(it => (
                 <div key={it.id} className="flex items-center gap-4 py-3 border-b border-border">
-                  <div className="w-24 h-24 bg-gray-100 rounded overflow-hidden"><img src={it.archivo_url || '/placeholder.png'} alt={it.titulo} className="w-full h-full object-cover" /></div>
+                  <div className="w-24 h-24 bg-gray-100 rounded overflow-hidden"><img src={normalizeDriveImageUrl(it.archivo_url)} alt={it.titulo} className="w-full h-full object-cover" /></div>
                   <div className="flex-1">
                     <div className="font-semibold">{it.titulo}</div>
                     <div className="text-sm text-muted">${it.precio.toFixed(2)}</div>

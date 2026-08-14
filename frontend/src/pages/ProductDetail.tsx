@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import Navbar from '../components/ui/Navbar'
 import productService from '../services/productService'
+import { normalizeDriveImageUrl } from '../utils/image'
 
 export default function ProductDetail(){
   const { id } = useParams()
@@ -26,7 +27,7 @@ export default function ProductDetail(){
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="md:col-span-1">
               <div className="w-full h-64 bg-gray-100 rounded-md overflow-hidden">
-                <img src={product.archivo_url || '/placeholder.png'} alt={product.titulo} className="object-cover w-full h-full" />
+                <img src={normalizeDriveImageUrl(product.archivo_url)} alt={product.titulo} className="object-cover w-full h-full" />
               </div>
             </div>
             <div className="md:col-span-2">

@@ -27,6 +27,18 @@ Al iniciar el sistema, la primera pantalla es el login. Si 5173 ya está en uso,
 
 La primera vista del sistema es el login. Si aún no tienes cuenta, usa la opción de registro desde la pantalla de acceso.
 
+## Imágenes en Google Drive
+
+Las imágenes de productos se guardan como referencia, no como blob en la base de datos. En `archivo_url` puedes guardar cualquiera de estas opciones:
+
+```text
+drive://<FILE_ID>
+https://drive.google.com/file/d/<FILE_ID>/view?usp=sharing
+https://drive.google.com/uc?export=view&id=<FILE_ID>
+```
+
+El sistema normaliza esas referencias para mostrarlas en el frontend sin guardar archivos dentro de PostgreSQL.
+
 ## Qué hace `npm run setup`
 
 - instala dependencias del backend y frontend
