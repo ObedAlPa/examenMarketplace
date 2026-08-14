@@ -11,10 +11,21 @@ npm run setup
 npm run dev
 ```
 
-Eso deja el sistema listo para probarlo en local con:
-- Frontend: http://localhost:5173
+Al iniciar el sistema, la primera pantalla es el login. Si 5173 ya está en uso, Vite puede abrir en 5174 automáticamente. La aplicación queda disponible en:
+- Frontend: http://localhost:5173  (o http://localhost:5174 si 5173 está ocupado)
 - Backend: http://localhost:4000
 - Health check: http://localhost:4000/api/health
+
+## Credenciales de prueba
+
+- Admin:
+  - email: `admin@tenomerca.test`
+  - password: `AdminPass123!`
+- Comprador:
+  - email: `buyer@tenomerca.test`
+  - password: `BuyerPass123!`
+
+La primera vista del sistema es el login. Si aún no tienes cuenta, usa la opción de registro desde la pantalla de acceso.
 
 ## Qué hace `npm run setup`
 

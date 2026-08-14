@@ -1,5 +1,5 @@
 import React from 'react'
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import Home from './pages/Home'
 import Catalog from './pages/Catalog'
 import ProductDetail from './pages/ProductDetail'
@@ -23,7 +23,8 @@ export default function App(){
     <AuthProvider>
       <CartProvider>
         <Routes>
-          <Route path='/' element={<Home/>} />
+          <Route path='/' element={<Navigate to='/auth/login' replace />} />
+          <Route path='/home' element={<Home/>} />
           <Route path='/catalog' element={<Catalog/>} />
           <Route path='/product/:id' element={<ProductDetail/>} />
           <Route path='/auth/login' element={<Login/>} />
