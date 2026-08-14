@@ -7,7 +7,7 @@ export default function Orders(){
   const [orders, setOrders] = useState<any[]>([])
 
   useEffect(() => {
-    orderService.fetchOrders().then(o => setOrders(o.reverse()))
+    orderService.fetchMyOrders().then(o => setOrders(o.reverse()))
   }, [])
 
   return (

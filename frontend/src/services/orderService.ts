@@ -30,6 +30,15 @@ export const fetchOrders = async () => {
   return readAll()
 }
 
+export const fetchMyOrders = async () => {
+  if (API_BASE) {
+    return apiClient.apiFetch('/api/orders/mine')
+  }
+
+  await new Promise(res => setTimeout(res, 80))
+  return readAll()
+}
+
 export const getOrderById = async (id: string) => {
   if (API_BASE) {
     try {
@@ -89,4 +98,4 @@ export const deleteOrder = async (id: string) => {
   return true
 }
 
-export default { fetchOrders, getOrderById, createOrder, updateOrder, deleteOrder }
+export default { fetchOrders, fetchMyOrders, getOrderById, createOrder, updateOrder, deleteOrder }

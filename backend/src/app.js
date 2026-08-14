@@ -141,7 +141,12 @@ app.post('/api/auth/login', async (req, res) => {
 })
 
 app.post('/api/auth/register', async (req, res) => {
-  const { nombre, email, password, role = 'comprador' } = req.body || {}
+  const { nombre, email, password } = req.body || {}
+
+  // Seguridad: el rol SIEMPRE queda 'comprador'. El campo `role` del body se
+  // IGNORA para bloquear la escalada de privilegios (hoy aceptaba role:'admin').
+  // Los admins se crean vía seed o vía PUT /api/users/:id.
+  const role = 'comprador'
 
   if (!nombre || !email || !password) {
     return res.status(400).json({ message: 'nombre, email y password son requeridos' })
@@ -151,8 +156,6 @@ app.post('/api/auth/register', async (req, res) => {
     return res.status(409).json({ message: 'El correo ya existe' })
   }
 
-  const resolvedRole = role === 'admin' || role === 'comprador' || role === 'buyer' ? (role === 'admin' ? 'admin' : 'comprador') : 'comprador'
-
   const hashed = await bcrypt.hash(String(password), 10)
 
   const user = {
@@ -160,7 +163,7 @@ app.post('/api/auth/register', async (req, res) => {
     nombre: String(nombre),
     email: String(email).toLowerCase(),
     password: hashed,
-    role: resolvedRole,
+    role: role,
     created_at: new Date().toISOString()
   }
 
@@ -336,12 +339,18 @@ app.delete('/api/categories/:id', requireAuth, requireRole('admin'), async (req,
   return res.status(204).send()
 })
 
-app.get('/api/users', async (req, res) => {
+// Solo admin puede listar todos los usuarios
+app.get('/api/users', requireRole('admin'), async (req, res) => {
   if (store) return res.json(await store.getUsers())
   return res.json(users.map((user) => sanitizeUser(user)))
 })
 
-app.get('/api/users/:id', async (req, res) => {
+// Solo admin o el propio usuario puede consultar un perfil
+app.get('/api/users/:id', requireAuth, async (req, res) => {
+  if (req.user.role !== 'admin' && req.user.id !== req.params.id) {
+    return res.status(403).json({ message: 'Acceso denegado' })
+  }
+
   if (store) {
     const u = await store.getUserById(req.params.id)
     if (!u) return sendNotFound(res, 'Usuario')
@@ -395,27 +404,48 @@ app.delete('/api/users/:id', requireAuth, requireRole('admin'), (req, res) => {
   return res.status(204).send()
 })
 
-app.get('/api/orders', async (req, res) => {
+// Solo admin puede listar TODOS los pedidos
+app.get('/api/orders', requireRole('admin'), async (req, res) => {
   if (store) return res.json(await store.getOrders())
   return res.json(orders)
 })
 
-app.get('/api/orders/:id', async (req, res) => {
+// Pedidos del usuario autenticado: un comprador solo ve LOS SUYOS
+// (se registra ANTES de GET /api/orders/:id para que ':id' no capture "mine")
+app.get('/api/orders/mine', requireAuth, async (req, res) => {
+  if (store) {
+    const all = await store.getOrders()
+    return res.json(all.filter((order) => order.user_id === req.user.id))
+  }
+  return res.json(orders.filter((order) => order.userId === req.user.id))
+})
+
+// Solo admin o el dueño del pedido puede verlo
+app.get('/api/orders/:id', requireAuth, async (req, res) => {
   if (store) {
     const order = await store.getOrderById(req.params.id)
     if (!order) return sendNotFound(res, 'Pedido')
+    if (req.user.role !== 'admin' && order.user_id !== req.user.id) {
+      return res.status(403).json({ message: 'Acceso denegado' })
+    }
     return res.json(order)
   }
   const order = orders.find((item) => item.id === req.params.id)
   if (!order) return sendNotFound(res, 'Pedido')
+  if (req.user.role !== 'admin' && order.userId !== req.user.id) {
+    return res.status(403).json({ message: 'Acceso denegado' })
+  }
   return res.json(order)
 })
 
 app.post('/api/orders', requireAuth, async (req, res) => {
   const payload = req.body || {}
+  // Seguridad: el dueño del pedido SIEMPRE es el usuario autenticado.
+  // Se ignora payload.userId / payload.user_id para que un usuario no
+  // pueda crear pedidos a nombre de otro.
   const order = {
     id: payload.id || withId('ORD'),
-    userId: payload.userId || payload.user_id || (req.user ? req.user.id : 'USR-2'),
+    userId: req.user.id,
     items: Array.isArray(payload.items) ? payload.items : [],
     total: Number(payload.total || 0),
     status: payload.status || 'pending'
@@ -431,7 +461,8 @@ app.post('/api/orders', requireAuth, async (req, res) => {
   return res.status(201).json(order)
 })
 
-app.put('/api/orders/:id', async (req, res) => {
+// Solo admin puede actualizar o eliminar pedidos
+app.put('/api/orders/:id', requireAuth, requireRole('admin'), async (req, res) => {
   if (store) {
     const updated = await store.updateOrder(req.params.id, req.body)
     if (!updated) return sendNotFound(res, 'Pedido')
@@ -445,7 +476,7 @@ app.put('/api/orders/:id', async (req, res) => {
   return res.json(orders[index])
 })
 
-app.delete('/api/orders/:id', async (req, res) => {
+app.delete('/api/orders/:id', requireAuth, requireRole('admin'), async (req, res) => {
   if (store) {
     const ok = await store.deleteOrder(req.params.id)
     if (!ok) return sendNotFound(res, 'Pedido')
@@ -460,12 +491,13 @@ app.delete('/api/orders/:id', async (req, res) => {
   return res.status(204).send()
 })
 
-app.get('/api/addresses', async (req, res) => {
+// Rutas de direcciones requieren sesión autenticada
+app.get('/api/addresses', requireAuth, async (req, res) => {
   if (store) return res.json(await store.getAddresses())
   return res.json(addresses)
 })
 
-app.post('/api/addresses', async (req, res) => {
+app.post('/api/addresses', requireAuth, async (req, res) => {
   const payload = req.body || {}
   const address = {
     id: payload.id || withId('ADR'),
@@ -490,7 +522,7 @@ app.post('/api/addresses', async (req, res) => {
   return res.status(201).json(address)
 })
 
-app.put('/api/addresses/:id', async (req, res) => {
+app.put('/api/addresses/:id', requireAuth, async (req, res) => {
   if (store) {
     const updated = await store.updateAddress(req.params.id, req.body)
     if (!updated) return sendNotFound(res, 'Dirección')
@@ -504,7 +536,7 @@ app.put('/api/addresses/:id', async (req, res) => {
   return res.json(addresses[index])
 })
 
-app.delete('/api/addresses/:id', async (req, res) => {
+app.delete('/api/addresses/:id', requireAuth, async (req, res) => {
   if (store) {
     const ok = await store.deleteAddress(req.params.id)
     if (!ok) return sendNotFound(res, 'Dirección')
