@@ -56,7 +56,7 @@ export default function ProductDetail(){
 
               <div className="mt-6 bg-surface p-4 rounded border border-border">
                 <h4 className="font-semibold">Vendedor</h4>
-                <p className="text-sm text-muted">Vendedor demo — información de contacto no disponible en mock</p>
+                <p className="text-sm text-muted">Información de contacto no disponible en mock</p>
               </div>
             </div>
           </div>
