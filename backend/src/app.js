@@ -591,6 +591,13 @@ app.post('/api/orders', requireAuth, async (req, res) => {
     if (!Number.isInteger(cantidad) || cantidad < 1) {
       return res.status(400).json({ message: `cantidad del producto ${requested.id} debe ser un entero mayor o igual a 1` })
     }
+    // Validar stock disponible y producto activo
+    if (product.activo === false) {
+      return res.status(400).json({ message: `El producto ${product.titulo} no está disponible` })
+    }
+    if (Number(product.stock || 0) < cantidad) {
+      return res.status(400).json({ message: `Stock insuficiente para ${product.titulo}. Disponible: ${product.stock}` })
+    }
     const precio = Number(product.precio) || 0
     items.push({
       id: product.id,
@@ -798,11 +805,14 @@ app.post('/api/upload', requireAuth, requireRole('admin'), upload.single('image'
     return res.status(400).json({ message: 'Se requiere un archivo de imagen' })
   }
 
+  const categorySlug = req.body.categorySlug || 'general'
+
   try {
     const { fileId } = await drive.uploadImage({
       buffer: file.buffer,
       mimeType: file.mimetype,
-      filename: Date.now() + '-' + file.originalname
+      filename: Date.now() + '-' + file.originalname,
+      categorySlug
     })
     return res.json({ archivo_url: 'drive://' + fileId })
   } catch (error) {

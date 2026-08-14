@@ -7,6 +7,7 @@ import orderService from '../services/orderService'
 import { validateCheckout, validateCheckoutField } from '../services/form'
 import { lookupCp } from '../services/cpService'
 import { formatPrice } from '../utils/format'
+import apiClient from '../services/apiClient'
 
 export default function Checkout(){
   const { items, total, clear } = useCart()
@@ -77,10 +78,38 @@ export default function Checkout(){
     return () => { mounted = false }
   }, [])
 
+  // Validar stock disponible en el carrito contra la API/backend
+  const validateStock = async () => {
+    const API_BASE = import.meta.env.VITE_API_URL || ''
+    if (!API_BASE) return { ok: true } // mock mode: sin validación real
+
+    for (const item of items) {
+      try {
+        const product = await apiClient.apiFetch(`/api/products/${item.id}`)
+        if (!product) return { ok: false, message: `Producto ${item.id} no encontrado` }
+        if (product.activo === false) return { ok: false, message: `El producto ${product.titulo} ya no está disponible` }
+        if (Number(product.stock || 0) < item.cantidad) {
+          return { ok: false, message: `Stock insuficiente para "${product.titulo}". Disponible: ${product.stock}, en carrito: ${item.cantidad}` }
+        }
+      } catch (e: any) {
+        if (e?.status === 404) return { ok: false, message: `Producto ${item.id} no encontrado` }
+        // si falla la API, no bloqueamos (degradado)
+        console.warn('No se pudo validar stock:', e)
+      }
+    }
+    return { ok: true }
+  }
+
   const handleConfirm = async () => {
     // run validations
     if (loadingCp) {
       setCpError('Espera a que termine la búsqueda del código postal.')
+      return
+    }
+    // Validar stock antes de proceder
+    const stockCheck = await validateStock()
+    if (!stockCheck.ok) {
+      setCpError(stockCheck.message)
       return
     }
     const ok = validate()
