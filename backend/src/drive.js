@@ -12,6 +12,17 @@
 // (ver backend/.env.example) con las variables GOOGLE_CLIENT_ID,
 // GOOGLE_CLIENT_SECRET, GOOGLE_REFRESH_TOKEN y GOOGLE_DRIVE_FOLDER_ID.
 //
+// ESTRUCTURA DE CARPETAS EN DRIVE:
+// Google Drive (al05-050-0322@utdelacosta.edu.mx)
+// └── Marketplace-Mexico (GOOGLE_DRIVE_FOLDER_ID)
+//     ├── electronica/
+//     ├── computacion/
+//     ├── hogar/
+//     ├── ropa/
+//     ├── deportes/
+//     ├── libros/
+//     └── general/
+//
 // CÓMO SE RENDERIZA DESPUÉS:
 // uploadImage devuelve { fileId } y la ruta lo expone como drive://<fileId>.
 // El frontend lo normaliza (backend/src/imageUrl.js) a la URL pública
@@ -38,14 +49,62 @@ const drive = isConfigured
     })()
   : null
 
-async function uploadImage({ buffer, mimeType, filename }) {
+// Mapeo de categoría (slug) a nombre de carpeta en Drive
+const CATEGORY_FOLDER_MAP = {
+  electronica: 'electronica',
+  computacion: 'computacion',
+  hogar: 'hogar',
+  ropa: 'ropa',
+  deportes: 'deportes',
+  libros: 'libros',
+  general: 'general'
+}
+
+// Cache de folder IDs para evitar llamadas repetidas
+const folderCache = new Map()
+
+async function getOrCreateCategoryFolder(categorySlug) {
+  const folderName = CATEGORY_FOLDER_MAP[categorySlug] || 'general'
+  if (folderCache.has(folderName)) return folderCache.get(folderName)
+
+  // Buscar si ya existe la carpeta dentro de la raíz
+  const searchResponse = await drive.files.list({
+    q: `name='${folderName}' and '${GOOGLE_DRIVE_FOLDER_ID}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+    fields: 'files(id, name)',
+    spaces: 'drive'
+  })
+
+  let folderId
+  if (searchResponse.data.files.length > 0) {
+    folderId = searchResponse.data.files[0].id
+  } else {
+    // Crear la carpeta
+    const createResponse = await drive.files.create({
+      requestBody: {
+        name: folderName,
+        mimeType: 'application/vnd.google-apps.folder',
+        parents: [GOOGLE_DRIVE_FOLDER_ID]
+      },
+      fields: 'id'
+    })
+    folderId = createResponse.data.id
+  }
+
+  folderCache.set(folderName, folderId)
+  return folderId
+}
+
+async function uploadImage({ buffer, mimeType, filename, categorySlug }) {
   if (!isConfigured) throw notConfiguredError()
 
-  // Archivo en la carpeta fija de Drive
+  // Determinar carpeta destino por categoría
+  const parentFolderId = await getOrCreateCategoryFolder(categorySlug || 'general')
+
+  // Archivo en la carpeta de la categoría
   const fileResponse = await drive.files.create({
     requestBody: {
       name: filename,
-      parents: [GOOGLE_DRIVE_FOLDER_ID]
+      parents: [parentFolderId]
     },
     media: {
       mimeType,

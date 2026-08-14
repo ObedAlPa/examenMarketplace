@@ -106,10 +106,11 @@ export const updateProduct = async (id: string, patch: any) => {
   return list[idx]
 }
 
-export const uploadImage = async (file: File) => {
+export const uploadImage = async (file: File, categorySlug?: string) => {
   if (API_BASE) {
     const formData = new FormData()
     formData.append('image', file)
+    if (categorySlug) formData.append('categorySlug', categorySlug)
     return apiClient.apiFetch('/api/upload', { method: 'POST', body: formData })
   }
 

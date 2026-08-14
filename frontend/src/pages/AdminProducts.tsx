@@ -60,7 +60,7 @@ export default function AdminProducts(){
     const p: any = { id: 'PRD-' + Date.now(), titulo: titulo.trim(), precio: precioNum, categoria }
     if (selectedFile) {
       try {
-        const res = await productService.uploadImage(selectedFile)
+        const res = await productService.uploadImage(selectedFile, categoria)
         if (res && res.archivo_url) p.archivo_url = res.archivo_url
       } catch (e: any) {
         if (e && e.status === 503) setUploadMessage('Imagen no subida: Google Drive no configurado. El producto se guardará sin imagen.')
