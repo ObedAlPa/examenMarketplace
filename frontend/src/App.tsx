@@ -15,21 +15,15 @@ import AdminProducts from './pages/AdminProducts'
 import AdminCategories from './pages/AdminCategories'
 import AdminUsersOrders from './pages/AdminUsersOrders'
 import AdminUsers from './pages/AdminUsers'
-import { AuthProvider, useAuth } from './context/AuthContext'
+import { AuthProvider } from './context/AuthContext'
 import { CartProvider } from './context/CartContext'
-
-// Redirige a home si hay sesión, o al login si no la hay
-const RootRedirect = () => {
-  const { user } = useAuth()
-  return <Navigate to={user ? '/home' : '/auth/login'} replace />
-}
 
 export default function App(){
   return (
     <AuthProvider>
       <CartProvider>
         <Routes>
-          <Route path='/' element={<RootRedirect />} />
+          <Route path='/' element={<Navigate to='/auth/login' replace />} />
           <Route path='/home' element={<Home/>} />
           <Route path='/catalog' element={<Catalog/>} />
           <Route path='/product/:id' element={<ProductDetail/>} />
