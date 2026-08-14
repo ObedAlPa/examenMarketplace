@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS products (
   categoria_id TEXT REFERENCES categories(id),
   featured BOOLEAN DEFAULT false,
   archivo_url TEXT,
+  activo BOOLEAN DEFAULT true,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 

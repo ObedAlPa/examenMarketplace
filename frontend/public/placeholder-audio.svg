@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+  <rect width="400" height="300" fill="#FFF2EF"/>
+  <circle cx="200" cy="120" r="50" fill="#C94F3C" opacity="0.15"/>
+  <path d="M170 120 L150 100 L150 140 Z M190 120 L170 100 L170 140 Z M210 120 L190 100 L190 140 Z M230 120 L210 100 L210 140 Z" fill="#C94F3C"/>
+  <text x="200" y="220" font-family="Poppins, sans-serif" font-size="16" fill="#C94F3C" text-anchor="middle" font-weight="600">Audífonos</text>
+</svg>

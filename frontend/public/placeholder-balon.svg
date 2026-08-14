@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+  <rect width="400" height="300" fill="#FFF2EF"/>
+  <circle cx="200" cy="130" r="60" fill="#C94F3C" opacity="0.15"/>
+  <circle cx="200" cy="130" r="50" stroke="#C94F3C" stroke-width="2" fill="none"/>
+  <path d="M150 130 Q200 110 250 130" stroke="#C94F3C" stroke-width="2" fill="none"/>
+  <path d="M150 130 Q200 150 250 130" stroke="#C94F3C" stroke-width="2" fill="none"/>
+  <path d="M200 80 Q200 130 200 180" stroke="#C94F3C" stroke-width="2" fill="none"/>
+  <text x="200" y="220" font-family="Poppins, sans-serif" font-size="16" fill="#C94F3C" text-anchor="middle" font-weight="600">Balón Fútbol</text>
+</svg>

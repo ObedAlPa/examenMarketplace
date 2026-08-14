@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+  <rect width="400" height="300" fill="#FFF2EF"/>
+  <path d="M150 80 Q130 80 130 110 L130 220 Q130 250 160 250 L240 250 Q270 250 270 220 L270 110 Q270 80 250 80 Z" fill="#C94F3C" opacity="0.15" stroke="#C94F3C" stroke-width="2"/>
+  <path d="M160 120 Q180 110 200 120 Q220 110 240 120" stroke="#C94F3C" stroke-width="2" fill="none"/>
+  <text x="200" y="260" font-family="Poppins, sans-serif" font-size="16" fill="#C94F3C" text-anchor="middle" font-weight="600">Playera Algodón</text>
+</svg>
