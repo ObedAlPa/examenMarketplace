@@ -8,8 +8,9 @@
   ],
   "scripts": {
     "setup": "npm install && node scripts/setup.js",
-    "dev": "concurrently \"npm --prefix backend run dev\" \"npm --prefix frontend run dev\"",
+    "prestart": "node scripts/setup.js",
     "start": "npm run dev",
+    "dev": "concurrently --kill-others \"npm --prefix backend run dev\" \"npm --prefix frontend run dev\"",
     "migrate": "npm --prefix backend run migrate",
     "seed": "npm --prefix backend run seed"
   },

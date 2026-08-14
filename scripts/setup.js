@@ -101,7 +101,7 @@ const ensureDatabaseExists = async (dbUrl, pgModule) => {
   const fallbackUrl = new URL(dbUrl)
   fallbackUrl.pathname = '/postgres'
 
-  const adminClient = new Client({ connectionString: fallbackUrl.toString() })
+  const adminClient = new Client({ connectionString: fallbackUrl.toString(), connectionTimeoutMillis: 8000 })
   try {
     await adminClient.connect()
     const result = await adminClient.query('SELECT 1 FROM pg_database WHERE datname = $1', [targetDb])
@@ -119,7 +119,7 @@ const ensureDatabaseExists = async (dbUrl, pgModule) => {
   }
 }
 
-const tryConnectToDatabase = () => {
+const tryConnectToDatabase = async () => {
   const backendEnv = readEnvFile(path.join(backendDir, '.env'))
   const dbUrl = backendEnv.DATABASE_URL && String(backendEnv.DATABASE_URL).trim()
 
@@ -141,54 +141,59 @@ const tryConnectToDatabase = () => {
   }
 
   const { Client } = pgModule
-  const client = new Client({ connectionString: dbUrl })
+  const client = new Client({ connectionString: dbUrl, connectionTimeoutMillis: 8000 })
 
-  client.connect()
-    .then(async () => {
-      console.log('PostgreSQL connection OK')
-      await client.end()
-      runMigrations(dbUrl)
-      runSeeds(dbUrl)
-    })
-    .catch(async (error) => {
-      const message = (error && error.message) ? String(error.message).toLowerCase() : ''
-      const isMissingDatabase = message.includes('does not exist') || (error && error.code === '3D000')
+  try {
+    await client.connect()
+    console.log('PostgreSQL connection OK')
+    await client.end()
+    runMigrations(dbUrl)
+    runSeeds(dbUrl)
+  } catch (error) {
+    const message = (error && error.message) ? String(error.message).toLowerCase() : ''
+    const isMissingDatabase = message.includes('does not exist') || (error && error.code === '3D000')
 
-      if (isMissingDatabase) {
-        console.warn(`Database "${parseDbName(dbUrl)}" was not found. Creating it automatically...`)
-        await ensureDatabaseExists(dbUrl, pgModule)
-        const retry = new Client({ connectionString: dbUrl })
-        try {
-          await retry.connect()
-          console.log('PostgreSQL connection OK after database creation')
-          await retry.end()
-          runMigrations(dbUrl)
-          runSeeds(dbUrl)
-        } catch (retryError) {
-          console.warn('PostgreSQL is still unavailable after creation; please check permissions and credentials.')
-          if (retryError && retryError.message) console.warn('Details:', retryError.message)
-        }
-        return
+    if (isMissingDatabase) {
+      console.warn(`Database "${parseDbName(dbUrl)}" was not found. Creating it automatically...`)
+      await ensureDatabaseExists(dbUrl, pgModule)
+      const retry = new Client({ connectionString: dbUrl, connectionTimeoutMillis: 8000 })
+      try {
+        await retry.connect()
+        console.log('PostgreSQL connection OK after database creation')
+        await retry.end()
+        runMigrations(dbUrl)
+        runSeeds(dbUrl)
+      } catch (retryError) {
+        console.warn('PostgreSQL is still unavailable after creation; please check permissions and credentials.')
+        if (retryError && retryError.message) console.warn('Details:', retryError.message)
       }
+      return
+    }
 
-      console.warn('PostgreSQL is not available or the URL is invalid. The app can still run in memory mode.')
-      console.warn('To enable PostgreSQL, update backend/.env and run:')
-      console.warn('  npm run migrate')
-      console.warn('  npm run seed')
-      console.warn('Current DATABASE_URL:', dbUrl)
-      if (error && error.message) {
-        console.warn('Details:', error.message)
-      }
-    })
+    console.warn('PostgreSQL is not available or the URL is invalid. The app can still run in memory mode.')
+    console.warn('To enable PostgreSQL, update backend/.env and run:')
+    console.warn('  npm run migrate')
+    console.warn('  npm run seed')
+    if (error && error.message) {
+      console.warn('Details:', error.message)
+    }
+  }
 }
 
-const main = () => {
+const main = async () => {
   ensureEnvFiles()
   console.log('Dependencies are installed with npm workspaces.')
   console.log('Using backend/.env and frontend/.env.local.')
-  tryConnectToDatabase()
-  console.log('Setup complete. To start the app:')
-  console.log('  npm run dev')
+  await tryConnectToDatabase()
+  if (process.env.npm_lifecycle_event === 'prestart') {
+    console.log('Preflight done. Starting servers...')
+  } else {
+    console.log('Setup complete. To start the app:')
+    console.log('  npm start')
+  }
 }
 
-main()
+main().catch((error) => {
+  console.error('Setup failed:', error && error.message)
+  process.exitCode = 1
+})

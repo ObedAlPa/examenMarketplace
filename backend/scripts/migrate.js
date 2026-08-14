@@ -1,7 +1,7 @@
 const fs = require('fs')
 const path = require('path')
 const { Client } = require('pg')
-require('dotenv').config({ path: path.resolve(__dirname, '..', '.env') })
+require('dotenv').config({ path: path.resolve(__dirname, '..', '.env'), quiet: true })
 
 const sql = fs.readFileSync(path.join(__dirname, '..', 'database', 'create_database.sql'), 'utf8')
 const DATABASE_URL = process.env.DATABASE_URL || process.env.PG_CONNECTION || 'postgresql://postgres:postgres@localhost:5432/tenomerca_dev'

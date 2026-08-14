@@ -1,7 +1,7 @@
 ﻿const path = require('path')
 const { Client } = require('pg')
 const bcrypt = require('bcrypt')
-require('dotenv').config({ path: path.resolve(__dirname, '..', '.env') })
+require('dotenv').config({ path: path.resolve(__dirname, '..', '.env'), quiet: true })
 
 const DATABASE_URL = process.env.DATABASE_URL || process.env.PG_CONNECTION || 'postgres://localhost:5432/tenomerca_dev'
 
