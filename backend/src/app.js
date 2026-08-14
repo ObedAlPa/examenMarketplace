@@ -34,7 +34,10 @@ const ORDER_STATUSES = ['Pendiente', 'Confirmado', 'Preparando', 'Enviado', 'Ent
 const PAYMENT_METHODS = ['Tarjeta simulada', 'Transferencia simulada', 'Efectivo/OXXO simulada']
 const PAYMENT_STATUSES = ['Pendiente', 'Pagado']
 
-const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:5173,http://localhost:5174,http://localhost:5175,http://127.0.0.1:5173,http://127.0.0.1:5174,http://127.0.0.1:5175,http://192.168.101.15:5173,http://192.168.101.15:5174,http://192.168.101.15:5175,http://localhost:3000')
+// En desarrollo cualquier origen localhost/127.0.0.1/192.168.* se acepta
+// automáticamente (isLocalDevOrigin). CORS_ORIGINS solo hace falta si algún
+// día despliegas con dominios propios; el default es el puerto dev estándar.
+const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:5173')
   .split(',')
   .map((value) => value.trim())
   .filter(Boolean)
