@@ -7,9 +7,8 @@
     "frontend"
   ],
   "scripts": {
-    "setup": "npm install && node scripts/setup.js",
-    "prestart": "node scripts/setup.js",
-    "start": "npm run dev",
+    "setup": "powershell -ExecutionPolicy Bypass -File scripts/setup.ps1",
+    "start": "powershell -ExecutionPolicy Bypass -File scripts/start.ps1",
     "dev": "concurrently \"npm --prefix backend run dev\" \"npm --prefix frontend run dev\"",
     "migrate": "npm --prefix backend run migrate",
     "seed": "npm --prefix backend run seed"

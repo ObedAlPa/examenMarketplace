@@ -11,15 +11,19 @@ Marketplace académico con frontend React + Vite, backend Express y persistencia
 
 ## Instalación rápida
 
-Desde la raíz del proyecto:
+Desde la raíz del proyecto (PowerShell en Windows):
 
 ```bash
 npm run setup
-npm run dev
+npm start
 ```
 
-Al iniciar el sistema, la primera pantalla es el login. Si 5173 ya está en uso, Vite puede abrir en 5174 automáticamente. La aplicación queda disponible en:
-- Frontend: http://localhost:5173  (o http://localhost:5174 si 5173 está ocupado)
+- `npm run setup`: verifica requisitos (Node, npm, PostgreSQL), crea los `.env` si faltan, instala dependencias con npm workspaces y ejecuta migraciones y seed.
+- `npm start`: libera los puertos 4000 y 5173 e inicia backend y frontend en ventanas separadas de PowerShell.
+- Alternativa multiplataforma (WSL/Linux/macOS): `npm run dev`, que levanta ambos con `concurrently`.
+
+Al iniciar el sistema, la primera pantalla es el login (ver sección de credenciales abajo). La aplicación queda disponible en:
+- Frontend: http://localhost:5173
 - Backend: http://localhost:4000
 - Health check: http://localhost:4000/api/health
 
@@ -67,11 +71,24 @@ El checkout consulta la API pública Postali (basada en SEPOMEX, sin API key) pa
 
 ## Qué hace `npm run setup`
 
-- instala dependencias del backend y frontend
-- crea `.env` y `.env.local` si no existen
-- intenta conectarse a PostgreSQL
-- si la base está disponible, verifica si la base de datos existe y la crea si hace falta
-- luego ejecuta migraciones y seeds
+Ejecuta `scripts/setup.ps1` (PowerShell):
+
+- verifica que Node.js, npm y PostgreSQL estén disponibles
+- crea `backend/.env` y `frontend/.env.local` a partir de los ejemplos si no existen
+- prueba la conexión a PostgreSQL usando `DATABASE_URL`
+- crea la base de datos si no existe
+- instala dependencias con npm workspaces
+- ejecuta migraciones y seeds
+
+## Qué hace `npm start`
+
+Ejecuta `scripts/start.ps1` (PowerShell):
+
+- verifica Node.js y `node_modules`
+- libera los puertos 4000 (backend) y 5173 (frontend) de procesos huérfanos
+- inicia el backend y el frontend en ventanas separadas de PowerShell
+
+Detén cada servicio presionando `Ctrl+C` en su ventana.
 
 ## Variables de entorno
 
@@ -108,7 +125,7 @@ El proyecto puede seguir funcionando en modo memoria mientras no haya una base d
 ```bash
 npm run migrate
 npm run seed
-npm run dev
+npm start
 ```
 
 ## Credenciales de prueba
@@ -137,7 +154,7 @@ npm run dev
 
 1. Inicia el proyecto con:
    ```bash
-   npm run dev
+   npm start
    ```
 2. Abre el frontend en el navegador.
 3. Inicia sesión con el administrador de prueba.
