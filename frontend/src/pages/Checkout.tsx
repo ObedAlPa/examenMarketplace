@@ -5,18 +5,7 @@ import { useNavigate } from 'react-router-dom'
 import * as addressService from '../services/addressService'
 import orderService from '../services/orderService'
 import { validateCheckout, validateCheckoutField } from '../services/form'
-
-// Mock postal code lookup - in production this will call a postal code API (SEPOMEX or similar)
-const mockCpLookup = async (cp: string) => {
-  // Simulate network latency
-  await new Promise(res => setTimeout(res, 400))
-  const map: Record<string, { estado: string; municipio: string; colonias: string[] }> = {
-    '01000': { estado: 'Ciudad de México', municipio: 'Cuauhtémoc', colonias: ['Centro', 'San Rafael', 'Juárez'] },
-    '64000': { estado: 'Nuevo León', municipio: 'Monterrey', colonias: ['Centro', 'Obispado'] },
-    '44100': { estado: 'Jalisco', municipio: 'Guadalajara', colonias: ['Centro', 'Americana'] }
-  }
-  return map[cp] || null
-}
+import { lookupCp } from '../services/cpService'
 
 export default function Checkout(){
   const { items, total, clear } = useCart()
@@ -66,16 +55,16 @@ export default function Checkout(){
     if (!codigoPostal || codigoPostal.length < 5) { setCpLookupResult(null); setCpError(null); return }
     setLoadingCp(true)
     const t = setTimeout(() => {
-      mockCpLookup(codigoPostal).then(res => {
+      lookupCp(codigoPostal).then(res => {
         setLoadingCp(false)
-        if (!res) { setCpLookupResult(null); setCpError('Código postal no encontrado (mock).') }
+        if (!res) { setCpLookupResult(null); setCpError('Código postal no encontrado') }
         else {
           setCpLookupResult(res.colonias)
           setMunicipio(res.municipio)
           setEstado(res.estado)
           setCpError(null)
         }
-      }).catch(() => { setLoadingCp(false); setCpError('Error en búsqueda (mock).') })
+      }).catch(() => { setLoadingCp(false); setCpError('Error al consultar el código postal') })
     }, 500)
     return () => clearTimeout(t)
   }, [codigoPostal])
