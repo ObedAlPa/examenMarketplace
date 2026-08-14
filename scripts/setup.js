@@ -38,8 +38,7 @@ const ensureEnvFiles = () => {
 
   const backendValues = readEnvFile(backendEnv)
   if (!backendValues.DATABASE_URL) {
-    const defaultValue = 'postgres://postgres:postgres@localhost:5432/marketplace_dev'
-    fs.appendFileSync(backendEnv, `\nDATABASE_URL=${defaultValue}\n`)
+    fs.appendFileSync(backendEnv, '\n# Leave DATABASE_URL blank if you want the app to run in memory mode without PostgreSQL\n')
   }
 
   const frontendValues = readEnvFile(frontendEnv)
@@ -73,7 +72,12 @@ const runSeeds = () => {
 
 const tryConnectToDatabase = () => {
   const backendEnv = readEnvFile(path.join(backendDir, '.env'))
-  const dbUrl = backendEnv.DATABASE_URL || 'postgres://postgres:postgres@localhost:5432/marketplace_dev'
+  const dbUrl = backendEnv.DATABASE_URL && String(backendEnv.DATABASE_URL).trim()
+
+  if (!dbUrl) {
+    console.log('No PostgreSQL URL configured. The app will run in memory mode until you add DATABASE_URL in backend/.env.')
+    return
+  }
 
   let pgModule = null
   try {
@@ -98,10 +102,14 @@ const tryConnectToDatabase = () => {
       runSeeds()
     })
     .catch((error) => {
-      console.warn('PostgreSQL is not available yet. Start your local PostgreSQL instance and run:')
+      console.warn('PostgreSQL is not available or the URL is invalid. The app can still run in memory mode.')
+      console.warn('To enable PostgreSQL, update backend/.env and run:')
       console.warn('  npm run migrate')
       console.warn('  npm run seed')
-      console.warn('Error:', error.message)
+      console.warn('Current DATABASE_URL:', dbUrl)
+      if (error && error.message) {
+        console.warn('Details:', error.message)
+      }
     })
 }
 

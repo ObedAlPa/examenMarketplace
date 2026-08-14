@@ -46,7 +46,7 @@ VITE_API_URL=http://localhost:4000
 
 ## Si PostgreSQL todavía no está levantado
 
-Puedes hacer esto manualmente:
+El proyecto puede seguir funcionando en modo memoria mientras no haya una base de datos disponible. Si quieres activar PostgreSQL, actualiza `backend/.env` con tu `DATABASE_URL` real y luego ejecuta:
 
 ```bash
 npm run migrate
