@@ -1,4 +1,4 @@
-const DEFAULT_PLACEHOLDER = '/placeholder.png'
+const DEFAULT_PLACEHOLDER = '/placeholder.svg'
 
 export const normalizeDriveImageUrl = (value?: string | null) => {
   if (!value || typeof value !== 'string') return DEFAULT_PLACEHOLDER
