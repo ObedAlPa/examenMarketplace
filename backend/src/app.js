@@ -23,15 +23,28 @@ try {
 const app = express()
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret'
 
-const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000')
+const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:5173,http://localhost:5174,http://localhost:5175,http://127.0.0.1:5173,http://127.0.0.1:5174,http://127.0.0.1:5175,http://192.168.101.15:5173,http://192.168.101.15:5174,http://192.168.101.15:5175,http://localhost:3000')
   .split(',')
   .map((value) => value.trim())
   .filter(Boolean)
 
+const isLocalDevOrigin = (origin) => {
+  if (!origin) return true
+
+  try {
+    const url = new URL(origin)
+    const hostname = url.hostname.toLowerCase()
+    const isLocalHost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '0.0.0.0' || hostname.startsWith('192.168.')
+    return isLocalHost && ['http:', 'https:'].includes(url.protocol)
+  } catch (error) {
+    return false
+  }
+}
+
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (!origin || allowedOrigins.includes(origin) || isLocalDevOrigin(origin)) {
         callback(null, true)
         return
       }
@@ -56,8 +69,8 @@ const buildToken = (user) => jwt.sign({ sub: user.id, email: user.email, role: u
 const findUserByEmail = async (email) => {
   const normalized = String(email || '').trim().toLowerCase()
   if (store) {
-    const users = await store.getUsers()
-    return users.find((u) => String(u.email || '').toLowerCase() === normalized) || null
+    const user = await store.getUserByEmail(normalized)
+    return user || null
   }
   return users.find((user) => user.email.toLowerCase() === normalized) || null
 }

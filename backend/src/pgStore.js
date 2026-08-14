@@ -63,6 +63,10 @@ module.exports = {
     const res = await db.query('SELECT id, nombre, email, role, created_at FROM users WHERE id=$1', [id])
     return res.rows[0] || null
   },
+  async getUserByEmail(email) {
+    const res = await db.query('SELECT * FROM users WHERE email=$1', [email])
+    return res.rows[0] || null
+  },
   async createUser(u) {
     const q = `INSERT INTO users (id,nombre,email,password,role,created_at) VALUES ($1,$2,$3,$4,$5,now()) RETURNING id,nombre,email,role,created_at`;
     const vals = [u.id, u.nombre, u.email, u.password || '', u.role || 'comprador']
