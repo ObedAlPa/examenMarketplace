@@ -1,6 +1,6 @@
 ﻿<#
 .SYNOPSIS
-  Configuración inicial del proyecto TenoMerca.
+  Configuración inicial del proyecto AutoPartes.
 .DESCRIPTION
   Verifica requisitos (Node, npm, PostgreSQL), configura los .env si faltan,
   prueba la conexión a PostgreSQL, crea la base de datos si no existe,
@@ -188,5 +188,5 @@ Write-Step "Configuración completada"
 Write-Host "`n  Para iniciar el proyecto:" -ForegroundColor Cyan
 Write-Host "    npm start" -ForegroundColor White
 Write-Host "`n  Usuarios de prueba:" -ForegroundColor Cyan
-Write-Host "    admin@tenomerca.test / AdminPass123!   (rol: admin)" -ForegroundColor White
-Write-Host "    buyer@tenomerca.test  / BuyerPass123!  (rol: comprador)" -ForegroundColor White
+Write-Host "    admin@auto.partes.test / AdminPass123!   (rol: admin)" -ForegroundColor White
+Write-Host "    buyer@auto.partes.test  / BuyerPass123!  (rol: comprador)" -ForegroundColor White
