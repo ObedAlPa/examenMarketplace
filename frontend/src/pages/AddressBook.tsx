@@ -1,11 +1,16 @@
 import React, { useEffect, useState } from 'react'
 import Navbar from '../components/ui/Navbar'
 import * as addressService from '../services/addressService'
+import { lookupCp } from '../services/cpService'
 
 export default function AddressBook(){
   const [addresses, setAddresses] = useState<addressService.Address[]>([])
   const [editing, setEditing] = useState<addressService.Address | null>(null)
   const [loading, setLoading] = useState(false)
+  const [codigoPostal, setCodigoPostal] = useState('')
+
+  const [cpLookupResult, setCpLookupResult] = useState<string[] | null>(null)
+  const [cpError, setCpError] = useState<string | null>(null)
 
   const load = async () => {
     setLoading(true)
@@ -15,6 +20,30 @@ export default function AddressBook(){
   }
 
   useEffect(() => { load() }, [])
+
+  useEffect(() => {
+    if (!codigoPostal || codigoPostal.length < 5) {
+      setCpLookupResult(null)
+      setCpError(null)
+      return
+    }
+    lookupCp(codigoPostal).then(res => {
+      if (!res) {
+        setCpLookupResult(null)
+        setCpError('Código postal no encontrado')
+      } else {
+        setCpLookupResult(res.colonias)
+        setCpError(null)
+        // Auto-poblar municipio y estado del editing cuando se encuentra el CP
+        setEditing(prev => ({
+          ...prev,
+          municipio: res.municipio,
+          estado: res.estado,
+          codigoPostal
+        }))
+      }
+    })
+  }, [codigoPostal])
 
   const startAdd = () => setEditing({ id: '', alias: '', nombre: '', calle: '', numero: '', colonia: '', municipio: '', estado: '', codigoPostal: '', pais: 'México', telefono: '' })
   const startEdit = (a: addressService.Address) => setEditing(a)
@@ -81,6 +110,18 @@ export default function AddressBook(){
               <input placeholder="Número" value={editing.numero} onChange={e=>setEditing({...editing, numero: e.target.value})} className="p-2 border rounded" />
               <input placeholder="Colonia" value={editing.colonia} onChange={e=>setEditing({...editing, colonia: e.target.value})} className="p-2 border rounded" />
               <input placeholder="Código postal" value={editing.codigoPostal} onChange={e=>setEditing({...editing, codigoPostal: e.target.value})} className="p-2 border rounded" />
+              {cpError && <div className="text-xs text-red-600 mt-1">{cpError}</div>}
+              {cpLookupResult && cpLookupResult.length > 0 && (
+                <div className="mt-1 text-sm text-muted">
+                  <strong>Colonias:</strong>
+                  <ul className="list-disc pl-3">
+                    {cpLookupResult.map(c => <li key={c}>{c}</li>)}
+                  </ul>
+                </div>
+              )}
+              {cpLookupResult && cpLookupResult.length === 0 && (
+                <div className="text-xs text-red-600 mt-1">No hay colonias para este código postal</div>
+              )}
               <input placeholder="Municipio" value={editing.municipio} onChange={e=>setEditing({...editing, municipio: e.target.value})} className="p-2 border rounded" />
               <input placeholder="Estado" value={editing.estado} onChange={e=>setEditing({...editing, estado: e.target.value})} className="p-2 border rounded" />
               <input placeholder="Teléfono" value={editing.telefono} onChange={e=>setEditing({...editing, telefono: e.target.value})} className="p-2 border rounded" />
