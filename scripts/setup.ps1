@@ -2,9 +2,11 @@
 .SYNOPSIS
   Configuración inicial del proyecto AutoPartes.
 .DESCRIPTION
-  Verifica requisitos (Node, npm, PostgreSQL), configura los .env si faltan,
-  prueba la conexión a PostgreSQL, crea la base de datos si no existe,
-  instala dependencias con npm workspaces y ejecuta migraciones y seed.
+  Verifica requisitos (Node, npm), configura los .env si faltan,
+  instala dependencias con npm workspaces y deja listo el proyecto
+  para correr en modo memoria (fallback) o con PostgreSQL.
+  Si no encuentra PostgreSQL, el proyecto correrá en modo memoria
+  con los datos seed incluidos en backend/src/data.js.
 #>
 
 $ErrorActionPreference = "Stop"
@@ -66,26 +68,6 @@ if (-not $npmVersion) {
 }
 Write-Success "npm $npmVersion detectado"
 
-$PSQL = "psql"
-$psqlVersion = psql --version 2>$null
-if (-not $psqlVersion) {
-  Write-Warn "psql no está en PATH. Buscando en C:\Program Files\PostgreSQL..."
-  $PSQL = $null
-  $pgDirs = Get-ChildItem $PG_PROGRAM_FILES -Directory -ErrorAction SilentlyContinue | Sort-Object Name -Descending
-  foreach ($pgDir in $pgDirs) {
-    $candidate = Join-Path $pgDir.FullName "bin\psql.exe"
-    if (Test-Path $candidate) { $PSQL = $candidate; break }
-  }
-  if (-not $PSQL) {
-    Write-Error "PostgreSQL no está instalado o no se encontró psql.exe."
-    Write-Host "  Instala PostgreSQL desde https://www.postgresql.org/download/windows/ y vuelve a intentarlo." -ForegroundColor Yellow
-    exit 1
-  }
-  Write-Success "PostgreSQL encontrado en $PSQL"
-} else {
-  Write-Success "PostgreSQL $psqlVersion detectado"
-}
-
 # ── 2. CONFIGURAR .env (SOLO si no existe) ──
 Write-Step "2. Configurando archivos .env"
 
@@ -111,32 +93,44 @@ if (Test-Path $FRONTEND_ENV) {
   Write-Success "frontend/.env.local creado a partir de .env.example"
 }
 
-# ── 3. PROBAR CONEXIÓN A POSTGRESQL ──
-Write-Step "3. Probando conexión a PostgreSQL"
+# ── 3. OPCIONAL: PROBAR POSTGRESQL ──
+Write-Step "3. Verificando PostgreSQL (opcional)"
 
+$usePostgreSQL = $true
 $dbUrlLine = Get-Content $BACKEND_ENV | Where-Object { $_ -match '^DATABASE_URL=' } | Select-Object -First 1
-if (-not $dbUrlLine) {
-  Write-Error "backend/.env no define DATABASE_URL. Agrégalo antes de ejecutar este script."
-  exit 1
-}
-$dbUrl = ($dbUrlLine -replace '^DATABASE_URL=', '').Trim()
-$dbInfo = Parse-DatabaseUrl $dbUrl
-if (-not $dbInfo) {
-  Write-Error "DATABASE_URL en backend/.env no tiene un formato válido (se espera postgresql://user:pass@host:port/db)."
-  exit 1
+
+if ($dbUrlLine) {
+  $dbUrl = ($dbUrlLine -replace '^DATABASE_URL=', '').Trim()
+  $dbInfo = Parse-DatabaseUrl $dbUrl
+
+  if ($dbInfo) {
+    $env:PGPASSWORD = $dbInfo.Password
+    $PSQL = "psql"
+    $psqlVersion = psql --version 2>$null
+    if ($psqlVersion) {
+      $connTest = Invoke-Native { & $PSQL -h $dbInfo.Host -p $dbInfo.Port -U $dbInfo.User -c "SELECT 1" }
+      if ($LASTEXITCODE -ne 0) {
+        Write-Warn "No se pudo conectar a PostgreSQL. El proyecto correrá en modo memoria."
+        $usePostgreSQL = $false
+      } else {
+        Write-Success "Conexión a PostgreSQL exitosa."
+      }
+    } else {
+      Write-Warn "psql no encontrado. El proyecto correrá en modo memoria."
+      $usePostgreSQL = $false
+    }
+  } else {
+    Write-Warn "DATABASE_URL no tiene formato válido. Modo memoria."
+    $usePostgreSQL = $false
+  }
+} else {
+  Write-Warn "No hay DATABASE_URL en .env. Modo memoria por defecto."
+  $usePostgreSQL = $false
 }
 
-$env:PGPASSWORD = $dbInfo.Password
-$connTest = Invoke-Native { & $PSQL -h $dbInfo.Host -p $dbInfo.Port -U $dbInfo.User -c "SELECT 1" }
-if ($LASTEXITCODE -ne 0) {
-  Write-Error "No se pudo conectar a PostgreSQL en $($dbInfo.Host):$($dbInfo.Port) con usuario $($dbInfo.User)"
-  Write-Host "  Verifica que el servicio esté corriendo: Services.msc → postgresql-x64-* → iniciar." -ForegroundColor Yellow
-  exit 1
-}
-Write-Success "Conexión a PostgreSQL exitosa"
-
-# ── 4. CREAR LA BASE DE DATOS SI NO EXISTE ──
-Write-Step "4. Creando la base de datos"
+# ── 4. CREAR BASE DE DATOS SÓLO SI HAY POSTGRESQL ──
+if ($usePostgreSQL) {
+Write-Step "4. Creando la base de datos si no existe"
 
 $dbExists = Invoke-Native { & $PSQL -h $dbInfo.Host -p $dbInfo.Port -U $dbInfo.User -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='$($dbInfo.Database)'" }
 if ("$dbExists".Trim() -eq "1") {
@@ -146,9 +140,10 @@ if ("$dbExists".Trim() -eq "1") {
   if ($LASTEXITCODE -eq 0) {
     Write-Success "Base de datos '$($dbInfo.Database)' creada"
   } else {
-    Write-Error "No se pudo crear la base de datos '$($dbInfo.Database)'"
-    exit 1
+    Write-Warn "No se pudo crear la base de datos. Continuando en modo memoria."
+    $usePostgreSQL = $false
   }
+}
 }
 
 # ── 5. INSTALAR DEPENDENCIAS ──
@@ -162,23 +157,25 @@ if ($LASTEXITCODE -ne 0) {
 }
 Write-Success "Dependencias instaladas"
 
-# ── 6. MIGRAR Y SEMBRAR LA BASE DE DATOS ──
+# ── 6. MIGRAR Y SEMBRAR (SÓLO POSTGRESQL) ──
+if ($usePostgreSQL) {
 Write-Step "6. Ejecutando migraciones y seed"
 
 Invoke-Native { npm --prefix backend run migrate }
 if ($LASTEXITCODE -eq 0) {
   Write-Success "Migraciones aplicadas"
 } else {
-  Write-Error "Falló la migración. Revisa el mensaje anterior."
-  exit 1
+  Write-Error "Falló la migración. Continuando en modo memoria."
+  $usePostgreSQL = $false
 }
 
 Invoke-Native { npm --prefix backend run seed }
 if ($LASTEXITCODE -eq 0) {
   Write-Success "Seed completado"
 } else {
-  Write-Error "Falló el seed. Revisa el mensaje anterior."
-  exit 1
+  Write-Error "Falló el seed. Continuando en modo memoria con datos del archivo data.js."
+  $usePostgreSQL = $false
+}
 }
 
 Set-Location $ROOT_DIR
@@ -187,6 +184,14 @@ Set-Location $ROOT_DIR
 Write-Step "Configuración completada"
 Write-Host "`n  Para iniciar el proyecto:" -ForegroundColor Cyan
 Write-Host "    npm start" -ForegroundColor White
+
+if ($usePostgreSQL) {
+  Write-Host "`n  Modo: PostgreSQL (base de datos relacional)" -ForegroundColor Green
+} else {
+  Write-Host "`n  Modo: Memoria (datos incluidos en el proyecto)" -ForegroundColor Yellow
+  Write-Host "  (Usa PostgreSQL si quieres persistencia real, pero no es obligatorio)"
+}
+
 Write-Host "`n  Usuarios de prueba:" -ForegroundColor Cyan
 Write-Host "    admin@auto.partes.test / AdminPass123!   (rol: admin)" -ForegroundColor White
 Write-Host "    buyer@auto.partes.test  / BuyerPass123!  (rol: comprador)" -ForegroundColor White
