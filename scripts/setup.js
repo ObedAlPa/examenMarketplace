@@ -47,24 +47,33 @@ const ensureEnvFiles = () => {
   }
 }
 
-const runCommand = (args) => {
-  const cmd = process.platform === 'win32' ? 'npm.cmd' : 'npm'
-  return spawnSync(cmd, args, {
+const runCommand = (args, extraEnv = {}) => {
+  const isWindows = process.platform === 'win32'
+  const cmd = isWindows ? 'cmd.exe' : 'npm'
+  const commandArgs = isWindows ? ['/d', '/s', '/c', 'npm', ...args] : args
+
+  return spawnSync(cmd, commandArgs, {
     cwd: root,
     stdio: 'inherit',
-    shell: false
+    env: { ...process.env, ...extraEnv }
   })
 }
 
-const runMigrations = () => {
-  const result = runCommand(['--prefix', 'backend', 'run', 'migrate'])
+const runMigrations = (dbUrl) => {
+  const result = runCommand(['--prefix', 'backend', 'run', 'migrate'], {
+    DATABASE_URL: dbUrl,
+    PG_CONNECTION: dbUrl,
+  })
   if (result.status !== 0) {
     console.warn('Migration failed. Check that PostgreSQL is running and DATABASE_URL is valid.')
   }
 }
 
-const runSeeds = () => {
-  const result = runCommand(['--prefix', 'backend', 'run', 'seed'])
+const runSeeds = (dbUrl) => {
+  const result = runCommand(['--prefix', 'backend', 'run', 'seed'], {
+    DATABASE_URL: dbUrl,
+    PG_CONNECTION: dbUrl,
+  })
   if (result.status !== 0) {
     console.warn('Seed failed. Check that PostgreSQL is running and the database has been created.')
   }
@@ -132,8 +141,8 @@ const tryConnectToDatabase = () => {
     .then(async () => {
       console.log('PostgreSQL connection OK')
       await client.end()
-      runMigrations()
-      runSeeds()
+      runMigrations(dbUrl)
+      runSeeds(dbUrl)
     })
     .catch(async (error) => {
       const message = (error && error.message) ? String(error.message).toLowerCase() : ''
@@ -147,8 +156,8 @@ const tryConnectToDatabase = () => {
           await retry.connect()
           console.log('PostgreSQL connection OK after database creation')
           await retry.end()
-          runMigrations()
-          runSeeds()
+          runMigrations(dbUrl)
+          runSeeds(dbUrl)
         } catch (retryError) {
           console.warn('PostgreSQL is still unavailable after creation; please check permissions and credentials.')
           if (retryError && retryError.message) console.warn('Details:', retryError.message)
