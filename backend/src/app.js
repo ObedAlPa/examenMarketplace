@@ -551,6 +551,58 @@ app.delete('/api/addresses/:id', requireAuth, async (req, res) => {
   return res.status(204).send()
 })
 
+// ============================================================
+// GET /api/codigo-postal/:cp — Consulta pública de código postal.
+// Usa la API de Postali (https://postali.app), basada en los datos
+// oficiales de SEPOMEX. Es gratuita y NO requiere API key.
+// La URL es configurable vía CP_API_URL (ver .env.example) por si
+// cambias de proveedor; si alguno llegara a pedir key, va en .env —
+// nunca hardcodeada en el código.
+// ============================================================
+app.get('/api/codigo-postal/:cp', async (req, res) => {
+  const cp = String(req.params.cp || '')
+
+  // Validación estricta: un CP mexicano son exactamente 5 dígitos
+  if (!/^\d{5}$/.test(cp)) {
+    return res.status(400).json({ message: 'Código postal inválido' })
+  }
+
+  const baseUrl = process.env.CP_API_URL || 'https://postali.app/api/v1/mx/cp/'
+
+  // Timeout de ~5s: si el proveedor externo no responde, abortamos la petición
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 5000)
+
+  let response
+  try {
+    response = await fetch(`${baseUrl}${cp}`, { signal: controller.signal })
+  } catch (error) {
+    // Error de red o timeout: el fallo es del proveedor externo, no del alumno
+    clearTimeout(timeout)
+    console.error(`Error consultando CP ${cp}:`, error && error.message)
+    return res.status(502).json({ message: 'No se pudo consultar el servicio de códigos postales' })
+  }
+  clearTimeout(timeout)
+
+  // El proveedor devuelve 404 cuando el CP no existe en SEPOMEX
+  if (!response.ok) {
+    return res.status(404).json({ message: 'Código postal no encontrado' })
+  }
+
+  const data = await response.json()
+  const colonias = Array.isArray(data.asentamientos)
+    ? data.asentamientos.map((item) => item && item.nombre).filter(Boolean)
+    : []
+
+  // Respuesta SIEMPRE con la misma forma que espera el Checkout del frontend
+  return res.json({
+    cp: data.cp || cp,
+    estado: data.estado || '',
+    municipio: data.municipio || '',
+    colonias
+  })
+})
+
 app.use((err, req, res, next) => {
   console.error(err)
   return res.status(500).json({ message: 'Error interno del servidor' })
