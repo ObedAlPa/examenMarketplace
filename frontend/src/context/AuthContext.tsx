@@ -63,14 +63,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     // Mock authentication using seeded test accounts from README
-    // Admin: admin@tenomerca.test / AdminPass123!
-    // Buyer: buyer@tenomerca.test / BuyerPass123!
-    if (email === 'admin@tenomerca.test' && password === 'AdminPass123!') {
-      const u = { email, nombre: 'Administrador Teno', role: 'admin' }
+    // Admin: admin@auto.partes.test / AdminPass123!
+    // Buyer: buyer@auto.partes.test / BuyerPass123!
+    if (email === 'admin@auto.partes.test' && password === 'AdminPass123!') {
+      const u = { email, nombre: 'Administrador Auto', role: 'admin' }
       setUser(u)
       return { ok: true }
     }
-    if (email === 'buyer@tenomerca.test' && password === 'BuyerPass123!') {
+    if (email === 'buyer@auto.partes.test' && password === 'BuyerPass123!') {
       const u = { email, nombre: 'Comprador Prueba', role: 'comprador' }
       setUser(u)
       return { ok: true }
