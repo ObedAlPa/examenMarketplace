@@ -10,7 +10,7 @@ async function run() {
 
   try {
     await client.connect()
-    console.log('Connected to', DATABASE_URL)
+    console.log('Connected to database (seed)')
 
     const users = [
       { id: 'USR-1', nombre: 'Admin', email: 'admin@tenomerca.test', password: 'AdminPass123!', role: 'admin' },

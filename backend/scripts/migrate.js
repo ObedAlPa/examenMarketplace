@@ -10,7 +10,7 @@ async function run() {
   const client = new Client({ connectionString: DATABASE_URL })
   try {
     await client.connect()
-    console.log('Connected to', DATABASE_URL)
+    console.log('Connected to database (migrate)')
     await client.query(sql)
     console.log('Migration applied')
   } catch (err) {
