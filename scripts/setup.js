@@ -40,6 +40,9 @@ const ensureEnvFiles = () => {
   if (!backendValues.DATABASE_URL) {
     fs.appendFileSync(backendEnv, '\n# Leave DATABASE_URL blank if you want the app to run in memory mode without PostgreSQL\n')
   }
+  if (!backendValues.CORS_ORIGINS) {
+    fs.appendFileSync(backendEnv, '\nCORS_ORIGINS=http://localhost:5173,http://localhost:5174,http://localhost:5175,http://127.0.0.1:5173,http://127.0.0.1:5174,http://127.0.0.1:5175,http://192.168.101.15:5173,http://192.168.101.15:5174,http://192.168.101.15:5175\n')
+  }
 
   const frontendValues = readEnvFile(frontendEnv)
   if (!frontendValues.VITE_API_URL) {
