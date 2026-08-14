@@ -1,6 +1,6 @@
-# Diseño e identidad de marca — Marketplace México v2
+# Diseño e identidad marca — AutoPartes v2
 
-Este documento define la identidad visual, paleta de colores, tipografía y reglas de uso que regirán TODO el frontend del proyecto. Todos los componentes deberán atenerse estrictamente a lo aquí definido. Si se requiere un nuevo color o componente, primero actualizar este archivo y luego implementarlo.
+Este documento define la identidad visual, paleta de colores, tipografía y reglas de uso que regirán TODO el frontend del proyecto AutoPartes. Todos los componentes deberán atenerse estrictamente a lo aquí definido. Si se requiere un nuevo color o componente, primero actualizar este archivo y luego implementarlo.
 
 ---
 
@@ -8,36 +8,36 @@ Este documento define la identidad visual, paleta de colores, tipografía y regl
 
 Opciones propuestas:
 
-1. TenoMerca — "Compras con alma mexicana"
-2. MercadoNopal — "Tu mercado, de raíz"
-3. PulsoMX — "Compras locales, con pulso"
+1. AutoPartes — "Tu auto, tus piezas"
+2. CarParts MX — "Piezas para tu vehículo"
+3. AutoHub — "El mercado de autopartes"
 
-Elección: TenoMerca
+Elección: AutoPartes
 
-Slogan: "Compras con alma mexicana"
+Slogan: "Tu auto, tus piezas"
 
-Breve justificación: "Teno" evoca la raíz náhuatl y la identidad mexicana sin ser genérico; suena moderno y cercano. "TenoMerca" es distintivo y evita similitudes con nombres genéricos tipo "MexiMarket" o con Mercado Libre.
+Breve justificación: "AutoPartes" es directo y describe el rubro sin ambigüedades. Evita la confusión con mercados generales y posiciona el producto inmediatamente. "MX" sugiere enfoque México sin ser tan específico como TenoMerca.
 
 ---
 
 ## 2. Logotipo / identidad visual
 
-Concepto: logotipo tipográfico con un símbolo simple inspirado en un pétalo/abanico estilizado que sugiere diversidad de productos y movimiento. El símbolo es geométrico y sencillo para funcionar bien en SVG y como favicon. Estilo: moderno, minimalista y cálido.
+Concepto: logotipo tipográfico con un símbolo simple inspirado en un aro de rueda estilizado o un fragmento de pieza mecánica que sugiere precisión y variedad de productos. El símbolo es geométrico y sencillo para funcionar bien en SVG y como favicon. Estilo: moderno, técnico y confiable.
 
 SVG del logotipo (versión horizontal: símbolo + nombre):
 
 ```svg
-<!-- Logo TenoMerca - horizontal -->
-<svg xmlns="http://www.w3.org/2000/svg" width="360" height="60" viewBox="0 0 360 60" role="img" aria-label="TenoMerca">
-  <title>TenoMerca</title>
-  <!-- símbolo: pétalo geométrico estilizado -->
+<!-- Logo AutoPartes - horizontal -->
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="60" viewBox="0 0 360 60" role="img" aria-label="AutoPartes">
+  <title>AutoPartes</title>
+  <!-- símbolo: aro de rueda estilizado -->
   <g transform="translate(10,6)">
-    <path d="M18 0 C28 6 34 18 30 28 C26 38 14 44 6 40 C-2 36 -2 22 2 12 C6 2 12 -6 18 0 Z" fill="#C94F3C" />
-    <path d="M28 4 C36 12 40 24 36 34 C32 44 22 50 14 46 C6 42 6 30 10 20 C14 10 20 0 28 4 Z" fill="#F29E7D" opacity="0.18" />
+    <path d="M12 0 C18 6 24 18 24 24 C24 30 18 42 12 48 C6 54 6 6 12 6 Z" fill="#2B3A58" />
+    <path d="M24 0 C30 6 36 18 36 24 C36 30 30 42 24 48 C18 54 12 6 24 6 Z" fill="#2B3A58" opacity="0.18" />
   </g>
   <!-- logotype text -->
-  <text x="80" y="36" font-family="Poppins, Inter, sans-serif" font-weight="600" font-size="28" fill="#222222">TenoMerca</text>
-  <text x="80" y="50" font-family="Merriweather, serif" font-weight="400" font-size="10" fill="#6B6B6B">Compras con alma mexicana</text>
+  <text x="80" y="36" font-family="Poppins, Inter, sans-serif" font-weight="600" font-size="28" fill="#222222">AutoPartes</text>
+  <text x="80" y="50" font-family="Merriweather, serif" font-weight="400" font-size="10" fill="#6B6B6B">Tu auto, tus piezas</text>
 </svg>
 ```
 
@@ -48,23 +48,23 @@ Notas de uso del logo:
 
 ---
 
-## 3. Paleta de colores (completamente distinta a amarillo/azul de Mercado Libre)
+## 3. Paleta de colores (acorde al rubro automotriz)
 
-- Primario: Terracota cálido — HEX: #C94F3C (uso: botones primarios, enlaces destacados, íconos activos)
-- Secundario: Verde Teal suave — HEX: #0E9AA7 (uso: acentos, badges secundarios, highlights)
+- Primario: Azul acero — HEX: #2B3A58 (uso: botones primarios, enlaces destacados, íconos activos)
+- Secundario: Naranja advertencia — HEX: #E67E22 (uso: acentos, badges secundarios, highlights, precios en oferta)
 - Fondo principal: Gris muy claro — HEX: #F7F7F8 (uso: fondo general de páginas)
 - Superficie (cards, paneles): Blanco puro — HEX: #FFFFFF
 - Texto principal (dark): Carbón — HEX: #222222
 - Texto secundario: Gris oscuro — HEX: #4B4B4B
 - Bordes / divider: Gris suave — HEX: #E6E6E9
-- Éxito: Verde claro — HEX: #1AAE9F
-- Error: Rojo oscuro — HEX: #D64550
-- Advertencia: Ámbar suave — HEX: #E6A23C
-- Enlace / accent alternative: Azul profundo (solo para links que requieren distinción) — HEX: #2B6CB0
+- Éxito: Verde oscuro — HEX: #1E8449
+- Error: Rojo oscuro — HEX: #C0392B
+- Advertencia: Naranja — HEX: #E67E22 (mismo que secundario, usado para precaución)
+- Enlace / accent alternative: Azul más claro — HEX: #2C3E50
 
 Uso recomendado:
-- Botón primario: fondo primario (#C94F3C) con texto blanco.
-- Botón secundario/outline: fondo blanco, borde #C94F3C, texto #C94F3C.
+- Botón primario: fondo primario (#2B3A58) con texto blanco.
+- Botón secundario/outline: fondo blanco, borde #2B3A58, texto #2B3A5C.
 - Estado success/error/alert: usar los colores dedicados para mensajes y badges.
 
 Contraste: diseñar siempre con contraste AA/AAA mínimo para texto según WCAG. Evitar usar tonos muy claros para texto sobre fondos claros.
@@ -119,33 +119,34 @@ Sistema de contenedor:
 Regla: usar clases utilitarias de Tailwind con tokens que mapearán a los colores/espaciados de este archivo.
 
 Botones (primary / secondary / ghost):
-- Primary:
-  - Background: #C94F3C
-  - Text: #FFFFFF
-  - Border-radius: 8px
-  - Padding: 10px 16px
-  - Hover: darken 8% (aprox #B14732)
-  - Active: translateY(1px) + shadow inset
-  - Disabled: bg #E6E6E9, text #A0A0A0, cursor not-allowed
 
-- Secondary (outline):
-  - Background: #FFFFFF
-  - Border: 1px solid #C94F3C
-  - Text: #C94F3C
-  - Hover: background #FFF2EF
+Primary:
+- Background: #2B3A58
+- Text: #FFFFFF
+- Border-radius: 8px
+- Padding: 10px 16px
+- Hover: darken 8% (aprox #22324D)
+- Active: translateY(1px) + shadow inset
+- Disabled: bg #E6E6E9, text #A0A0A0, cursor not-allowed
 
-- Ghost (text only):
-  - Background: transparent
-  - Text: #0E9AA7
+Secondary (outline):
+- Background: #FFFFFF
+- Border: 1px solid #2B3A58
+- Text: #2B3A58
+- Hover: background #F0F2F5
+
+Ghost (text only):
+- Background: transparent
+- Text: #E67E22
 
 Inputs / Selects / Textarea:
 - Background: #FFFFFF
 - Border: 1px solid #E6E6E9
 - Border-radius: 8px
-- Padding: 10px
+- Padding: 10x
 - Placeholder: #BDBDBD
-- Focus: outline none; box-shadow: 0 0 0 3px rgba(14,154,167,0.12) (usar color secundario con baja opacidad)
-- Error state: border-color #D64550; box-shadow rgba(214,69,80,0.12)
+- Focus: outline none; box-shadow: 0 0 0 3px rgba(43,58,88,0.12) (usar color secundario con baja opacidad)
+- Error state: border-color #C0392B; box-shadow rgba(192,57,43,0.12)
 
 Cards de producto:
 - Background: #FFFFFF
@@ -155,16 +156,16 @@ Cards de producto:
 - Imagen: ratio 4:3 (object-fit: cover), border-radius: 8px
 - Shadow ligero: 0 4px 10px rgba(16,16,16,0.04)
 - Nombre: h4 (16px, 600)
-- Precio: 16px, 700, color #C94F3C
-- Badge de stock: si stock > 0 badge verde (#1AAE9F) con texto blanco; si stock == 0 badge gris/rojo según status
+- Precio: 16px, 700, color #E67E22
+- Badge de stock: si stock > 0 badge verde (#1E8449) con texto blanco; si stock == 0 badge gris/rojo según status
 
-Badges de estado de pedido:
-- Pendiente: background #E6A23C, text #222
-- Confirmado: background #0E9AA7, text #fff
-- Preparando: background #2B6CB0, text #fff
-- Enviado: background #1AAE9F, text #fff
-- Entregado: background #1AAE9F, text #fff
-- Cancelado: background #D64550, text #fff
+Badges de estado de orden:
+- Pendiente: background #E67E22, text #222
+- Confirmado: background #2B3A58, text #fff
+- Preparando: background #1E8449, text #fff
+- Enviado: background #1E8449, text #fff
+- Entregado: background #1E8449, text #fff
+- Cancelado: background #C0392B, text #fff
 
 Navbar:
 - Height: 64px
@@ -200,15 +201,16 @@ Qué NO:
 
 En el proyecto frontend, mapear estos tokens en tailwind.config.js:
 
-- colors.primary: '#C94F3C'
-- colors.secondary: '#0E9AA7'
+- colors.primary: '#2B3A58'
+- colors.secondary: '#E67E22'
 - colors.bg: '#F7F7F8'
 - colors.surface: '#FFFFFF'
 - colors.text: '#222222'
 - colors.muted: '#4B4B4B'
 - colors.border: '#E6E6E9'
-- colors.success: '#1AAE9F'
-- colors.error: '#D64550'
+- colors.success: '#1E8449'
+- colors.error: '#C0392B'
+- colors.warning: '#E67E22'
 - spacing.1 = '4px', spacing.2 = '8px', spacing.3 = '12px', spacing.4 = '16px', spacing.6 = '24px', spacing.8 = '32px'
 
 Ejemplo de clase utilizable: .btn-primary { @apply bg-primary text-white px-4 py-2 rounded-lg font-semibold }
@@ -218,7 +220,7 @@ Ejemplo de clase utilizable: .btn-primary { @apply bg-primary text-white px-4 py
 ## 9. Ejemplos de componentes (código conceptual)
 
 Botón primario (Tailwind):
-- className: "bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:bg-[#B14732] disabled:bg-[#E6E6E9]"
+- className: "bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:bg-[#22324D] disabled:bg-[#E6E6E9]"
 
 Card de producto (estructura):
 - <div className="bg-surface border border-border rounded-xl p-4 shadow-sm"> <img ... /> <h4 className="text-base font-semibold text-text">Nombre</h4> <p className="text-sm text-muted">Categoría</p> <div className="mt-2"><span className="text-lg font-bold text-primary">$1,299.00</span></div></div>
@@ -233,4 +235,4 @@ Card de producto (estructura):
 
 ---
 
-> Archivo generado por: Copilot CLI runtime in VS Code (asistente AI) — identidad: soy un asistente AI usando Copilot CLI runtime en VS Code.
+> Archivo generado por: asistente SDD — conversión de identidad de marca de marketplace a tienda de autopartes.
