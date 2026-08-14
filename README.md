@@ -1,5 +1,12 @@
 ﻿# TenoMerca
 
+## Ficha académica
+
+- Alumno: Obed Alcantar Pacheco
+- Profesor: MIA. César Geovanni Machuca Pereida
+- Materia: Desarrollo web integral
+- Unidad temática: Unidad 3 — Integración de componentes de software para aplicaciones Web
+
 Marketplace académico con frontend React + Vite, backend Express y persistencia PostgreSQL preparada.
 
 ## Instalación rápida
@@ -39,6 +46,25 @@ https://drive.google.com/uc?export=view&id=<FILE_ID>
 
 El sistema normaliza esas referencias para mostrarlas en el frontend sin guardar archivos dentro de PostgreSQL.
 
+## Configuración de Google Drive
+
+Las imágenes de productos se suben a la cuenta institucional `al05-050-0322@utdelacosta.edu.mx` mediante OAuth2 con refresh token. Pasos resumidos:
+
+1. Entra a Google Cloud Console y crea un proyecto.
+2. Habilita la API de Google Drive.
+3. Crea un OAuth Client ID de tipo "Desktop app" y anota el Client ID y el Client Secret.
+4. Autoriza una vez con la cuenta institucional para obtener el refresh token (flujo OAuth2).
+5. Define las 4 variables de Drive en `backend/.env`.
+6. En Drive, crea la estructura de carpetas `Marketplace-Mexico/{electronica, hogar, ropa}`.
+7. `GOOGLE_DRIVE_FOLDER_ID` es el ID de la carpeta `Marketplace-Mexico`.
+8. Las imágenes se suben con permiso "cualquier persona con el enlace".
+
+Nota: si Drive no está configurado, el sistema sigue funcionando. La subida responde 503 con un mensaje claro y los productos usan una imagen placeholder.
+
+## Búsqueda de código postal
+
+El checkout consulta la API pública Postali (basada en SEPOMEX, sin API key) para autocompletar estado, municipio y colonias con debounce al escribir el código postal. La URL es configurable vía `CP_API_URL` en `backend/.env` por si cambias de proveedor.
+
 ## Qué hace `npm run setup`
 
 - instala dependencias del backend y frontend
@@ -60,6 +86,13 @@ PORT=4000
 JWT_SECRET=change-this-secret
 CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
 DATABASE_URL=postgres://postgres:postgres@localhost:5432/marketplace_dev
+# URL de la API pública Postali (SEPOMEX), sin API key. Configurable por si cambias de proveedor.
+CP_API_URL=https://postali.app/api/v1/mx/cp/
+# Google Drive (OAuth2 con refresh token). Ver sección "Configuración de Google Drive".
+GOOGLE_CLIENT_ID=tu-client-id
+GOOGLE_CLIENT_SECRET=tu-client-secret
+GOOGLE_REFRESH_TOKEN=tu-refresh-token
+GOOGLE_DRIVE_FOLDER_ID=id-de-la-carpeta-marketplace-mexico
 ```
 
 Frontend:
@@ -90,7 +123,10 @@ npm run dev
 ## Funcionalidades principales
 
 - catálogo de productos
-- carrito y checkout
+- carrito con backend y checkout
+- pedidos con número de pedido y pago simulado (método y estado)
+- búsqueda de código postal real (Postali/SEPOMEX)
+- subida de imágenes de productos a Google Drive
 - login y registro
 - autenticación con JWT
 - roles admin/comprador
