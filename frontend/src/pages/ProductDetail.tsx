@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom'
 import Navbar from '../components/ui/Navbar'
 import productService from '../services/productService'
 import { normalizeDriveImageUrl } from '../utils/image'
+import { formatPrice } from '../utils/format'
 import { useCart } from '../context/CartContext'
 
 export default function ProductDetail(){
@@ -43,7 +44,7 @@ export default function ProductDetail(){
             <div className="md:col-span-2">
               <h1 className="text-2xl font-bold">{product.titulo}</h1>
               <p className="text-muted mt-2">Categoría: {product.categoria || 'General'}</p>
-              <p className="mt-4 text-lg font-semibold text-primary">${product.precio.toFixed(2)}</p>
+              <p className="mt-4 text-lg font-semibold text-primary">{formatPrice(product.precio)}</p>
               <p className="mt-3">{product.descripcion || 'Sin descripción disponible.'}</p>
 
               <div className="mt-6 flex items-center gap-4">

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Navbar from '../components/ui/Navbar'
 import orderService from '../services/orderService'
+import { formatPrice } from '../utils/format'
 
 export default function Orders(){
   const [orders, setOrders] = useState<any[]>([])
@@ -27,7 +28,7 @@ export default function Orders(){
                     <div className="text-sm text-muted">Creado: {new Date(o.created_at).toLocaleString()}</div>
                   </div>
                   <div className="text-right">
-                    <div className="font-semibold">${o.total.toFixed(2)}</div>
+                    <div className="font-semibold">{formatPrice(o.total)}</div>
                     <div className="text-sm mt-1"><span className="px-2 py-1 rounded" style={{background:'#E6A23C'}}> {o.status} </span>{o.estado_pago && <span className="ml-1 px-2 py-1 rounded text-white" style={{background: o.estado_pago === 'Pagado' ? '#67C23A' : '#E6A23C'}}> {o.estado_pago} </span>}</div>
                   </div>
                 </div>

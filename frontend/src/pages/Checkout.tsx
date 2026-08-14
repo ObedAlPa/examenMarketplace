@@ -6,6 +6,7 @@ import * as addressService from '../services/addressService'
 import orderService from '../services/orderService'
 import { validateCheckout, validateCheckoutField } from '../services/form'
 import { lookupCp } from '../services/cpService'
+import { formatPrice } from '../utils/format'
 
 export default function Checkout(){
   const { items, total, clear } = useCart()
@@ -242,12 +243,12 @@ export default function Checkout(){
                 {items.map(it => (
                   <div key={it.id} className="flex items-center justify-between">
                     <div className="text-sm">{it.titulo} x{it.cantidad}</div>
-                    <div className="text-sm font-semibold">${(it.precio*it.cantidad).toFixed(2)}</div>
+                    <div className="text-sm font-semibold">{formatPrice(it.precio * it.cantidad)}</div>
                   </div>
                 ))}
               </div>
               <div className="mt-4 border-t border-border pt-3">
-                <div className="flex justify-between"><span>Total</span><strong>${total.toFixed(2)}</strong></div>
+                <div className="flex justify-between"><span>Total</span><strong>{formatPrice(total)}</strong></div>
                 <div className="mt-3 flex items-center gap-2">
                   <input id="save-address" type="checkbox" checked={saveToAccount} onChange={e=>setSaveToAccount(e.target.checked)} />
                   <label htmlFor="save-address" className="text-sm">Guardar esta dirección en mi cuenta (cuando el backend esté disponible se persistirá en el servidor)</label>

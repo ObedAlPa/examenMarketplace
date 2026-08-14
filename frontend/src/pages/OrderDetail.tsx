@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import Navbar from '../components/ui/Navbar'
 import orderService from '../services/orderService'
+import { formatPrice } from '../utils/format'
 
 export default function OrderDetail(){
   const { id } = useParams()
@@ -37,7 +38,7 @@ export default function OrderDetail(){
               <div className="mt-2 text-sm">Items: {order.items.length} (cantidad total: {order.items.reduce((s: number, it: any) => s + it.cantidad, 0)})</div>
             </div>
             <div className="text-right">
-              <div className="font-bold text-lg">Total: ${order.total.toFixed(2)}</div>
+              <div className="font-bold text-lg">Total: {formatPrice(order.total)}</div>
               <div className="text-sm text-muted">Estado: {order.status}</div>
             </div>
           </div>
@@ -48,7 +49,7 @@ export default function OrderDetail(){
               {order.items.map((it: any) => (
                 <div key={it.id} className="flex justify-between">
                   <div className="text-sm">{it.titulo} x{it.cantidad}</div>
-                  <div className="text-sm font-semibold">${(it.precio*it.cantidad).toFixed(2)}</div>
+                  <div className="text-sm font-semibold">{formatPrice(it.precio * it.cantidad)}</div>
                 </div>
               ))}
             </div>

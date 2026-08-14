@@ -2,6 +2,7 @@ import React from 'react'
 import Navbar from '../components/ui/Navbar'
 import { useCart } from '../context/CartContext'
 import { normalizeDriveImageUrl } from '../utils/image'
+import { formatPrice } from '../utils/format'
 
 export default function Cart(){
   const { items, updateQuantity, removeItem, total, clear } = useCart()
@@ -21,7 +22,7 @@ export default function Cart(){
                   <div className="w-24 h-24 bg-gray-100 rounded overflow-hidden"><img src={normalizeDriveImageUrl(it.archivo_url)} alt={it.titulo} className="w-full h-full object-cover" /></div>
                   <div className="flex-1">
                     <div className="font-semibold">{it.titulo}</div>
-                    <div className="text-sm text-muted">${it.precio.toFixed(2)}</div>
+                    <div className="text-sm text-muted">{formatPrice(it.precio)}</div>
                     <div className="mt-2 flex items-center gap-2">
                       <button onClick={() => updateQuantity(it.id, Math.max(1, it.cantidad - 1))} className="px-2 py-1 border rounded">-</button>
                       <div className="px-3">{it.cantidad}</div>
@@ -35,7 +36,7 @@ export default function Cart(){
 
             <aside className="md:col-span-1 bg-white p-4 rounded border border-border">
               <h4 className="font-semibold">Resumen</h4>
-              <div className="mt-4 flex justify-between"><span>Subtotal</span><span>${total.toFixed(2)}</span></div>
+              <div className="mt-4 flex justify-between"><span>Subtotal</span><span>{formatPrice(total)}</span></div>
               <div className="mt-6">
                 <button className="w-full bg-primary text-white px-4 py-2 rounded">Proceder a pagar (simulado)</button>
               </div>
