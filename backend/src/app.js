@@ -55,6 +55,27 @@ const getUserFromRequest = (req) => {
   }
 }
 
+// Middleware: require that a valid JWT is provided
+const requireAuth = (req, res, next) => {
+  const user = getUserFromRequest(req)
+  if (!user) return res.status(401).json({ message: 'No autorizado' })
+  req.user = user
+  next()
+}
+
+// Middleware factory: require a specific role (e.g., 'admin')
+const requireRole = (role) => (req, res, next) => {
+  const user = req.user || getUserFromRequest(req)
+  if (!user) return res.status(401).json({ message: 'No autorizado' })
+  if (role === 'admin') {
+    if (user.role !== 'admin') return res.status(403).json({ message: 'Acceso denegado' })
+  } else {
+    if (user.role !== role) return res.status(403).json({ message: 'Acceso denegado' })
+  }
+  req.user = user
+  next()
+}
+
 const sendNotFound = (res, resourceName = 'Registro') => res.status(404).json({ message: `${resourceName} no encontrado` })
 
 app.get('/api/health', (req, res) => {
@@ -146,7 +167,7 @@ app.get('/api/products/:id', (req, res) => {
   return res.json(product)
 })
 
-app.post('/api/products', (req, res) => {
+app.post('/api/products', requireAuth, requireRole('admin'), (req, res) => {
   const payload = req.body || {}
   const product = {
     id: payload.id || withId('p'),
@@ -164,7 +185,7 @@ app.post('/api/products', (req, res) => {
   return res.status(201).json(product)
 })
 
-app.put('/api/products/:id', (req, res) => {
+app.put('/api/products/:id', requireAuth, requireRole('admin'), (req, res) => {
   const index = products.findIndex((item) => item.id === req.params.id)
   if (index === -1) return sendNotFound(res, 'Producto')
 
@@ -172,7 +193,7 @@ app.put('/api/products/:id', (req, res) => {
   return res.json(products[index])
 })
 
-app.delete('/api/products/:id', (req, res) => {
+app.delete('/api/products/:id', requireAuth, requireRole('admin'), (req, res) => {
   const initialLength = products.length
   const remaining = products.filter((item) => item.id !== req.params.id)
   if (remaining.length === initialLength) return sendNotFound(res, 'Producto')
@@ -183,7 +204,7 @@ app.delete('/api/products/:id', (req, res) => {
 
 app.get('/api/categories', (req, res) => res.json(categories))
 
-app.post('/api/categories', (req, res) => {
+app.post('/api/categories', requireAuth, requireRole('admin'), (req, res) => {
   const { nombre, slug } = req.body || {}
   if (!nombre) return res.status(400).json({ message: 'nombre es requerido' })
 
@@ -197,7 +218,7 @@ app.post('/api/categories', (req, res) => {
   return res.status(201).json(category)
 })
 
-app.put('/api/categories/:id', (req, res) => {
+app.put('/api/categories/:id', requireAuth, requireRole('admin'), (req, res) => {
   const index = categories.findIndex((item) => item.id === req.params.id)
   if (index === -1) return sendNotFound(res, 'Categoría')
 
@@ -205,7 +226,7 @@ app.put('/api/categories/:id', (req, res) => {
   return res.json(categories[index])
 })
 
-app.delete('/api/categories/:id', (req, res) => {
+app.delete('/api/categories/:id', requireAuth, requireRole('admin'), (req, res) => {
   const initialLength = categories.length
   const remaining = categories.filter((item) => item.id !== req.params.id)
   if (remaining.length === initialLength) return sendNotFound(res, 'Categoría')
@@ -222,7 +243,7 @@ app.get('/api/users/:id', (req, res) => {
   return res.json(sanitizeUser(user))
 })
 
-app.post('/api/users', (req, res) => {
+app.post('/api/users', requireAuth, requireRole('admin'), (req, res) => {
   const { nombre, email, password, role = 'comprador' } = req.body || {}
   if (!nombre || !email || !password) return res.status(400).json({ message: 'nombre, email y password son requeridos' })
 
@@ -241,7 +262,7 @@ app.post('/api/users', (req, res) => {
   return res.status(201).json(sanitizeUser(newUser))
 })
 
-app.put('/api/users/:id', (req, res) => {
+app.put('/api/users/:id', requireAuth, requireRole('admin'), (req, res) => {
   const index = users.findIndex((item) => item.id === req.params.id)
   if (index === -1) return sendNotFound(res, 'Usuario')
 
@@ -249,7 +270,7 @@ app.put('/api/users/:id', (req, res) => {
   return res.json(sanitizeUser(users[index]))
 })
 
-app.delete('/api/users/:id', (req, res) => {
+app.delete('/api/users/:id', requireAuth, requireRole('admin'), (req, res) => {
   const initialLength = users.length
   const remaining = users.filter((item) => item.id !== req.params.id)
   if (remaining.length === initialLength) return sendNotFound(res, 'Usuario')
@@ -266,11 +287,11 @@ app.get('/api/orders/:id', (req, res) => {
   return res.json(order)
 })
 
-app.post('/api/orders', (req, res) => {
+app.post('/api/orders', requireAuth, (req, res) => {
   const payload = req.body || {}
   const order = {
     id: payload.id || withId('ORD'),
-    userId: payload.userId || payload.user_id || 'USR-2',
+    userId: payload.userId || payload.user_id || (req.user ? req.user.id : 'USR-2'),
     items: Array.isArray(payload.items) ? payload.items : [],
     total: Number(payload.total || 0),
     status: payload.status || 'pending',
