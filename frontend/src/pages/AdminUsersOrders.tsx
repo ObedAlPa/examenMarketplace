@@ -1,9 +1,16 @@
 import React, { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 import Navbar from '../components/ui/Navbar'
 import orderService from '../services/orderService'
 import SimpleModal from '../components/ui/SimpleModal'
 
 export default function AdminUsersOrders(){
+  const navigate = useNavigate()
+  const auth = useAuth()
+
+  useEffect(() => { if (!auth.user) { navigate('/auth/login'); return } if (auth.user.role !== 'admin') { navigate('/') } }, [auth.user, navigate])
+
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
 

@@ -1,11 +1,24 @@
 import React, { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 import Navbar from '../components/ui/Navbar'
 import productService from '../services/productService'
 import { v4 as uuidv4 } from 'uuid'
 import SimpleModal from '../components/ui/SimpleModal'
 
 export default function AdminProducts(){
-  // ... rest of component
+  const navigate = useNavigate()
+  const auth = useAuth()
+
+  useEffect(() => {
+    if (!auth.user) {
+      navigate('/auth/login')
+      return
+    }
+    if (auth.user.role !== 'admin') {
+      navigate('/')
+    }
+  }, [auth.user, navigate])
 
   const [products, setProducts] = useState<any[]>([])
   const [loading, setLoading] = useState(false)

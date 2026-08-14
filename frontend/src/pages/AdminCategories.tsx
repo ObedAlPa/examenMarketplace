@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 import Navbar from '../components/ui/Navbar'
 import categoryService from '../services/categoryService'
 import SimpleModal from '../components/ui/SimpleModal'
@@ -7,6 +9,11 @@ export default function AdminCategories(){
   const [categories, setCategories] = useState<any[]>([])
   const [name, setName] = useState('')
   const [loading, setLoading] = useState(false)
+
+  const navigate = useNavigate()
+  const auth = useAuth()
+
+  useEffect(() => { if (!auth.user) { navigate('/auth/login'); return } if (auth.user.role !== 'admin') { navigate('/') } }, [auth.user, navigate])
 
   useEffect(() => { load() }, [])
 
