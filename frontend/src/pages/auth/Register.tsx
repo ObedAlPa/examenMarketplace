@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../../context/AuthContext'
 import { validateRegister } from '../../services/form'
 
 export default function Register(){
@@ -8,7 +9,9 @@ export default function Register(){
   const [confirmPassword, setConfirmPassword] = useState('')
   const [name, setName] = useState('')
   const [message, setMessage] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
   const [errors, setErrors] = useState<Record<string,string>>({})
+  const auth = useAuth()
   const navigate = useNavigate()
 
   const validate = () => {
@@ -17,9 +20,19 @@ export default function Register(){
     return Object.keys(next).length === 0
   }
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError(null)
     if (!validate()) return
+
+    const API_BASE = import.meta.env.VITE_API_URL || ''
+
+    if (API_BASE) {
+      const res = await auth.register(name.trim(), email.trim(), password)
+      if (!res.ok) return setError(res.message || 'Error al crear la cuenta')
+      return navigate('/home')
+    }
+
     // Mock register: simply show success and redirect to login
     setMessage('Cuenta creada (modo mock). Ahora puedes iniciar sesión con tus credenciales.')
     setTimeout(() => navigate('/auth/login'), 1200)
@@ -31,6 +44,7 @@ export default function Register(){
         <h1 className="text-2xl font-bold mb-4">Registro</h1>
         <form onSubmit={submit} className="bg-white p-6 rounded-lg border border-border">
           {message && <div role="status" aria-live="polite" className="mb-3 text-sm text-white bg-success p-2 rounded">{message}</div>}
+          {error && <div id="register-error" role="alert" className="mb-3 text-sm text-white bg-red-600 p-2 rounded">{error}</div>}
 
           <label htmlFor="register-name" className="block text-sm mb-1">Nombre completo</label>
           <input id="register-name" value={name} onChange={e => { setName(e.target.value); if (errors.name) setErrors(s => { const n = {...s}; delete n.name; return n }) }} onBlur={() => { if (errors.name) validate() }} className="w-full p-2 rounded border border-border mb-1" aria-invalid={!!errors.name} aria-describedby={errors.name ? 'register-name-error' : undefined} />

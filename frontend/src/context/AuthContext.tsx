@@ -6,6 +6,7 @@ type User = { email: string; nombre?: string; role?: string }
 type AuthContextValue = {
   user: User | null
   login: (email: string, password: string) => Promise<{ ok: boolean; message?: string }>
+  register: (nombre: string, email: string, password: string) => Promise<{ ok: boolean; message?: string }>
   logout: () => void
 }
 
@@ -77,10 +78,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return { ok: false, message: 'Credenciales inválidas (modo mock). Usa los usuarios de prueba en README.' }
   }
 
+  const register = async (nombre: string, email: string, password: string) => {
+    const API_BASE = import.meta.env.VITE_API_URL || ''
+
+    if (API_BASE) {
+      try {
+        const resp: any = await apiClient.apiFetch('/api/auth/register', { method: 'POST', body: JSON.stringify({ nombre, email, password }) })
+        if (resp && resp.token) {
+          try { localStorage.setItem('tenomerca_token', resp.token) } catch {}
+        }
+        if (resp && resp.user) setUser(resp.user)
+        return { ok: true }
+      } catch (e: any) {
+        return { ok: false, message: e && e.message ? e.message : 'Error al crear la cuenta' }
+      }
+    }
+
+    return { ok: true }
+  }
+
   const logout = () => {
     try { localStorage.removeItem('tenomerca_token') } catch {}
     setUser(null)
   }
 
-  return <AuthContext.Provider value={{ user, login, logout }}>{children}</AuthContext.Provider>
+  return <AuthContext.Provider value={{ user, login, register, logout }}>{children}</AuthContext.Provider>
 }
