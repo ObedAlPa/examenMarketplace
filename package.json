@@ -8,7 +8,7 @@
   ],
   "scripts": {
     "setup": "npm install && node scripts/setup.js",
-    "dev": "concurrently -k \"npm --prefix backend run dev\" \"npm --prefix frontend run dev\"",
+    "dev": "concurrently \"npm --prefix backend run dev\" \"npm --prefix frontend run dev\"",
     "start": "npm run dev",
     "migrate": "npm --prefix backend run migrate",
     "seed": "npm --prefix backend run seed"
