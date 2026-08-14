@@ -8,6 +8,10 @@ export default function Home(){
   const [products, setProducts] = useState([])
   const [categories, setCategories] = useState<string[]>([])
 
+  // El backend devuelve categorías como objetos {id, nombre, slug} y el mock
+  // como strings; normalizamos a string para no crashear el render.
+  const categoryName = (c: any) => (typeof c === 'string' ? c : (c && c.nombre) || '')
+
   useEffect(() => {
     productService.getFeaturedProducts().then(setProducts)
     productService.getCategories().then(setCategories)
@@ -20,9 +24,12 @@ export default function Home(){
         <section className="mb-6">
           <h2 className="text-2xl font-semibold">Categorías</h2>
           <div className="flex gap-3 mt-3">
-            {categories.map(c => (
-              <Link key={c} to={`/catalog?category=${encodeURIComponent(c)}`} className="px-3 py-1 rounded bg-white border border-border text-muted">{c}</Link>
-            ))}
+            {categories.map(c => {
+              const name = categoryName(c)
+              return (
+                <Link key={name} to={`/catalog?category=${encodeURIComponent(name)}`} className="px-3 py-1 rounded bg-white border border-border text-muted">{name}</Link>
+              )
+            })}
           </div>
         </section>
 
