@@ -4,5 +4,5 @@ const app = require('./app')
 const PORT = Number(process.env.PORT || 4000)
 
 app.listen(PORT, () => {
-  console.log(`TenoMerca API running on http://localhost:${PORT}`)
+  console.log(`AutoPartes API running on http://localhost:${PORT}`)
 })
