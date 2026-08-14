@@ -27,7 +27,7 @@ export default function Login(){
     const res = await auth.login(email.trim(), password)
     setLoading(false)
     if (!res.ok) return setError(res.message || 'Error')
-    navigate('/')
+    navigate('/home')
   }
 
   return (
